@@ -82,6 +82,29 @@ function questStatus(s,questId){
  if(definition.prerequisites.some(id=>s.quests[id]?.status!=='complete'))return 'locked';
  return q.status==='active'?'active':'locked';
 }
+function completeQuest(s,questId,amount=1){
+ const definition=registry.quests[questId],q=s.quests[questId];
+ if(!definition||!q)return {ok:false,message:'Görev yok.'};
+ if(questStatus(s,questId)!=='active')return {ok:false,message:'Bu görev henüz açık değil.'};
+ if(!Number.isInteger(amount)||amount<1)return {ok:false,message:'Geçersiz görev ilerlemesi.'};
+ if(q.status==='complete')return {ok:false,message:'Bu görev zaten tamamlandı.'};
+ const nextProgress=Math.min(definition.amount,q.progress+amount),reward=definition.reward;
+ if(nextProgress>=definition.amount&&reward.item!==undefined&&!s.inventory[reward.item]&&used(s)>=capacity(s))return {ok:false,message:'Ödül için depoda yer aç.'};
+ q.progress=nextProgress;
+ if(q.progress>=definition.amount){
+  q.status='complete';s.inventory[reward.item]+=reward.amount;gainSkill(s,reward.skill,reward.xp);note(s,'Görev tamamlandı: '+definition.name);
+  registry.quests.forEach(next=>{const target=s.quests[next.id];if(target.status==='locked'&&next.prerequisites.every(id=>s.quests[id].status==='complete'))target.status='active'});
+  return {ok:true,message:'Görev tamamlandı: '+definition.name};
+ }
+ return {ok:true,message:`Görev ilerlemesi ${q.progress}/${definition.amount}.`};
+}
+function newGamePlus(previous,prestige=1){
+ if(!previous||!previous.ended)throw Error('Yeni oyun+ için önce hikâyeyi tamamla.');
+ const next=newGame(Date.now());next.prestige=Math.max(1,Math.min(99,Number(prestige)||1));
+ next.achievements=[...new Set(previous.achievements||[])];next.skills=previous.skills.map(x=>({level:x.level,xp:x.xp}));next.skill=previous.skill;
+ for(const id of [5,6,7,8,11,12,13,14,18,19])if(previous.inventory[id]>0)next.inventory[id]=1;
+ next.journal=['Yeni oyun+ başladı. Önceki ustalığın ve başarıların bu yolculuğa taşındı.'];return next;
+}
 function applyEvent(s,eventId,choice,now=Date.now()){
  const definition=registry.events[eventId],saved=s.events[eventId];
  if(!definition||!saved)return {ok:false,message:'Olay yok.'};
@@ -180,8 +203,9 @@ function reduce(s,a,now=Date.now()){
   else return no('Hikâye tamamlandı.');note(s,dialogue(s));return yes(objective(s));
  }
  if(a.type==='event')return applyEvent(s,a.event,a.choice,now);
+ if(a.type==='quest')return completeQuest(s,a.quest,a.amount);
  return no('Bilinmeyen işlem.');
 }
-const api={items,recipes,regions,buildingNames,skills:registry.skills,quests:registry.quests,events:registry.events,newGame,validate,migrate,findRecipe,reduce,chance,capacity,used,objective,dialogue,costs,skillCheck,questStatus,applyEvent};
+const api={items,recipes,regions,buildingNames,skills:registry.skills,quests:registry.quests,events:registry.events,newGame,newGamePlus,validate,migrate,findRecipe,reduce,chance,capacity,used,objective,dialogue,costs,skillCheck,questStatus,completeQuest,applyEvent};
 if(typeof module!=='undefined')module.exports=api;else root.Primal=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
