@@ -7,9 +7,10 @@ const artInk='#5a351a';
 const rasterIcons={
   0:[1,0,0],1:[1,1,0],3:[1,2,0],4:[1,3,0],10:[1,0,1],17:[1,1,1],20:[1,2,1],21:[1,3,1],22:[1,0,2],23:[1,1,2],24:[1,2,2],25:[1,3,2],26:[1,0,3],27:[1,1,3],28:[1,2,3],29:[1,3,3],
   30:[2,0,0],31:[2,1,0],32:[2,2,0],33:[2,3,0],34:[2,0,1],35:[2,1,1],36:[2,2,1],37:[2,3,1],38:[2,0,2],39:[2,1,2],40:[2,2,2],41:[2,3,2],42:[2,0,3],43:[2,1,3],44:[2,2,3],45:[2,3,3],
-  46:[3,0,0],47:[3,1,0],48:[3,2,0],49:[3,3,0],50:[3,0,1],51:[3,1,1],52:[3,2,1],53:[3,3,1],54:[3,0,2],55:[3,1,2]
+  46:[3,0,0],47:[3,1,0],48:[3,2,0],49:[3,3,0],50:[3,0,1],51:[3,1,1],52:[3,2,1],53:[3,3,1],54:[3,0,2],55:[3,1,2],
+  56:[4,0,0],57:[4,1,0],58:[4,2,0],59:[4,3,0],60:[4,0,1],61:[4,1,1],62:[4,2,1],63:[4,3,1],64:[4,0,2],65:[4,1,2],66:[4,2,2],67:[4,3,2],68:[4,0,3],69:[4,1,3],70:[4,2,3],71:[4,3,3],72:[5,0,0],73:[5,1,0],74:[5,2,0],75:[5,3,0],76:[5,0,1],77:[5,1,1],78:[5,2,1],79:[5,3,1],80:[5,0,2],81:[5,1,2],82:[5,2,2],83:[5,3,2],84:[5,0,3],85:[5,1,3]
 };
-function rasterIcon(id,cls){const [sheet,col,row]=rasterIcons[id];const x=col*33.333333,y=row*33.333333;return `<span class="item-art raster-art ${cls}" style="background-image:url('art/materials-0${sheet}.png');background-position:${x}% ${y}%;background-size:400% 400%" aria-hidden="true"></span>`}
+function rasterIcon(id,cls){const [sheet,col,row]=rasterIcons[id];const x=col*33.333333,y=row*33.333333;const group=sheet<4?'materials':'foods';const local=sheet<4?sheet:sheet-3;return `<span class="item-art raster-art ${cls}" style="background-image:url('art/${group}-0${local}.png');background-position:${x}% ${y}%;background-size:400% 400%" aria-hidden="true"></span>`}
 function itemArt(id){
  const item=P.itemData?.[id]||{};const name=(item.name||P.items[id]||'').toLocaleLowerCase('tr-TR');const category=item.category||'Malzeme';const hue=(id*37)%360;const fill=`hsl(${hue} 42% 62%)`;
  const wrap=body=>`<svg viewBox="0 0 80 80" role="img" aria-label="${esc(P.items[id])}" xmlns="http://www.w3.org/2000/svg"><g stroke="${artInk}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${body}</g></svg>`;
