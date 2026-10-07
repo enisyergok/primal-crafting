@@ -13,7 +13,7 @@ function load(){
       if(raw.includes('version=1')){
         const old={inventory:[],journal:[]};
         raw.split(/\r?\n/).forEach(line=>{
-          const m=line.match(/^v(\d+)=(.*)$/);if(m)old[['chapter','region','health','food','water','energy','minutes','day','trust','route','searches'][+m[1]]=+m[2];
+          const m=line.match(/^v(\d+)=(.*)$/);if(m)old[['chapter','region','health','food','water','energy','minutes','day','trust','route','searches'][+m[1]]] = +m[2];
           const i=line.match(/^i(\d+)=(.*)$/);if(i)old.inventory[+i[1]]=+i[2];
         });
         notice='Eski kayıt yeni sisteme aktarıldı.';return P.migrate(old);
