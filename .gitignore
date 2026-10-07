@@ -1,0 +1,7 @@
+.gradle/
+.gradle-local/
+build/
+app/build/
+android-sdk/
+android-commandline-tools.zip
+android-sdk-stage/
