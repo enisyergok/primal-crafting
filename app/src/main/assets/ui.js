@@ -4,6 +4,12 @@ const P=globalThis.Primal;let state=load();let page='camp';let selectedRecipe=0;
 let audioContext=null;
 const $=s=>document.querySelector(s), esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const artInk='#5a351a';
+const rasterIcons={
+  0:[1,0,0],1:[1,1,0],3:[1,2,0],4:[1,3,0],10:[1,0,1],17:[1,1,1],20:[1,2,1],21:[1,3,1],22:[1,0,2],23:[1,1,2],24:[1,2,2],25:[1,3,2],26:[1,0,3],27:[1,1,3],28:[1,2,3],29:[1,3,3],
+  30:[2,0,0],31:[2,1,0],32:[2,2,0],33:[2,3,0],34:[2,0,1],35:[2,1,1],36:[2,2,1],37:[2,3,1],38:[2,0,2],39:[2,1,2],40:[2,2,2],41:[2,3,2],42:[2,0,3],43:[2,1,3],44:[2,2,3],45:[2,3,3],
+  46:[3,0,0],47:[3,1,0],48:[3,2,0],49:[3,3,0],50:[3,0,1],51:[3,1,1],52:[3,2,1],53:[3,3,1],54:[3,0,2],55:[3,1,2]
+};
+function rasterIcon(id,cls){const [sheet,col,row]=rasterIcons[id];const x=col*33.333333,y=row*33.333333;return `<span class="item-art raster-art ${cls}" style="background-image:url('art/materials-0${sheet}.png');background-position:${x}% ${y}%;background-size:400% 400%" aria-hidden="true"></span>`}
 function itemArt(id){
  const item=P.itemData?.[id]||{};const name=(item.name||P.items[id]||'').toLocaleLowerCase('tr-TR');const category=item.category||'Malzeme';const hue=(id*37)%360;const fill=`hsl(${hue} 42% 62%)`;
  const wrap=body=>`<svg viewBox="0 0 80 80" role="img" aria-label="${esc(P.items[id])}" xmlns="http://www.w3.org/2000/svg"><g stroke="${artInk}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${body}</g></svg>`;
@@ -33,7 +39,7 @@ function itemArt(id){
  if(item.tags?.includes('container')||/kabuk|deniz|mercan|kil/.test(name))return wrap(`<path fill="#b97b48" d="M17 34c4 22 42 22 46 0-7 8-39 8-46 0Z"/><path fill="#efd09a" d="M17 34c3-12 43-12 46 0-9 8-37 8-46 0Z"/>`);
  return wrap(`<path fill="${fill}" d="m14 47 12-28 32-6 10 27-20 22-28-4Z"/><path d="m28 25 16 12 14-18" fill="none" stroke="#e8d2a0"/>`);
 }
-const icon=(id,cls='')=>id<24?`<span class="sprite ${cls}" style="background-position:${(id%6)*20}% ${Math.floor(id/6)*33.333}%" aria-hidden="true"></span>`:`<span class="item-art ${cls}" aria-hidden="true">${itemArt(id)}</span>`;
+const icon=(id,cls='')=>rasterIcons[id]?rasterIcon(id,cls):id<24?`<span class="sprite ${cls}" style="background-position:${(id%6)*20}% ${Math.floor(id/6)*33.333}%" aria-hidden="true"></span>`:`<span class="item-art ${cls}" aria-hidden="true">${itemArt(id)}</span>`;
 const button=(label,attrs='',cls='secondary')=>`<button class="${cls}" ${attrs}>${label}</button>`;
 function load(){
   try {
