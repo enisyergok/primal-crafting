@@ -15,8 +15,9 @@ function newGame(now=Date.now()){
  chapter:0,region:0,trust:0,route:-1,searches:0,expeditions:0,metMira:false,ate:false,lens:false,ended:false,introduced:false,
  skill:12,skills:registry.skills.map(()=>({level:0,xp:0})),tool:-1,durability:{},rng:now>>>0||1234567,discovered:recipes.map((_,i)=>i<3),
   quests:registry.quests.map((q,i)=>({id:q.id,status:i<3?'active':'locked',progress:0})),events:registry.events.map(e=>({id:e.id,resolved:false})),achievements:[],prestige:0,
+  stats:{actions:0,gathered:0,crafted:0,events:0,quests:0},regionsVisited:[true,false,false,false],
  helper:{energy:100,gathering:18,lumber:9,body:-1,hand:-1,bag:-1,job:null},
- buildings:{home:1,depot:1,workshop:1,farm:1,fire:1},journal:['Fırtına seni bu kıyıya getirdi. Usta Akın üretimi öğretecek; ormandan Mira’nın sesi geliyor.'],lastFarm:now};
+  buildings:{home:1,depot:1,workshop:1,farm:1,fire:1},journal:['Fırtına seni bu kıyıya getirdi. Usta Akın üretimi öğretecek; ormandan Mira’nın sesi geliyor.'],lastFarm:now-300000};
 }
 function validate(s){
  const bad=()=>{throw Error('Kayıt bozuk; özgün kayıt korunuyor.')};
@@ -29,7 +30,9 @@ function validate(s){
  if(!Array.isArray(s.skills)||s.skills.length!==registry.skills.length||!s.skills.every(x=>x&&num(x.level,0,20)&&num(x.xp,0,1000000)))bad();
  if(!Array.isArray(s.quests)||s.quests.length!==registry.quests.length||!s.quests.every(x=>x&&num(x.id,0,registry.quests.length-1)&&['locked','active','complete','failed'].includes(x.status)&&num(x.progress,0,1000000)))bad();
  if(!Array.isArray(s.events)||s.events.length!==registry.events.length||!s.events.every(x=>x&&num(x.id,0,registry.events.length-1)&&typeof x.resolved==='boolean'))bad();
- if(!Array.isArray(s.achievements)||!s.achievements.every(x=>Number.isInteger(x)&&x>=0))bad();
+ if(!Array.isArray(s.achievements)||!s.achievements.every(x=>Number.isInteger(x)&&x>=0&&x<registry.achievements.length))bad();
+ if(!s.stats||!['actions','gathered','crafted','events','quests'].every(k=>num(s.stats[k],0,100000000)))bad();
+ if(!Array.isArray(s.regionsVisited)||s.regionsVisited.length!==regions.length||!s.regionsVisited.every(v=>typeof v==='boolean'))bad();
  for(const key of Object.keys(buildingNames))if(!num(s.buildings[key],1,5))bad();
  for(const [key,min,max] of [['energy',0,100],['gathering',0,100],['lumber',0,100],['body',-1,19],['hand',-1,19],['bag',-1,19]])if(!num(s.helper[key],min,max))bad();
  for(const key of Object.keys(s.durability))if(!num(s.durability[key],0,1000))bad();
@@ -40,9 +43,14 @@ function validate(s){
 }
 function migrate(old){
  const s=newGame();
- for(const k of ['health','food','water','energy','chapter','region','trust','route','day','minutes','searches','expeditions','metMira','ate','lens','ended','introduced'])if(old[k]!==undefined)s[k]=old[k];
+ for(const k of ['health','food','water','energy','chapter','region','trust','route','day','minutes','searches','expeditions','metMira','ate','lens','ended','introduced','prestige','lastFarm'])if(old[k]!==undefined)s[k]=old[k];
  if(Array.isArray(old.inventory))old.inventory.slice(0,20).forEach((n,i)=>s.inventory[i]=n);
  if(Array.isArray(old.journal))s.journal=old.journal.slice(-80);
+ if(Array.isArray(old.skills)&&old.skills.length===s.skills.length)s.skills=old.skills.map(x=>({level:Number(x.level)||0,xp:Number(x.xp)||0}));
+ if(Array.isArray(old.achievements))s.achievements=[...new Set(old.achievements.filter(x=>Number.isInteger(x)&&x>=0&&x<registry.achievements.length))];
+ if(old.helper&&typeof old.helper==='object')s.helper={...s.helper,...old.helper};
+ if(old.buildings&&typeof old.buildings==='object')s.buildings={...s.buildings,...old.buildings};
+ if(Array.isArray(old.regionsVisited)&&old.regionsVisited.length===regions.length)s.regionsVisited=old.regionsVisited.map(Boolean);
  recipes.forEach((r,i)=>{if(s.inventory[r.out])s.discovered[i]=true});
  return validate(s);
 }
@@ -117,11 +125,40 @@ function applyEvent(s,eventId,choice,now=Date.now()){
  s.energy=Math.max(0,Math.min(100,s.energy+Number(delta.energy||0)));s.trust=Math.max(-10,Math.min(10,s.trust+Number(delta.trust||0)));
  if(delta.item!==undefined)s.inventory[delta.item]+=Number(delta.amount||1);
  if(delta.xp)gainSkill(s,Number(delta.skill||definition.skill),delta.xp);
- saved.resolved=true;note(s,definition.name+' · '+selected.text);return {ok:true,message:selected.text};
+ saved.resolved=true;s.stats.events++;note(s,definition.name+' · '+selected.text);return {ok:true,message:selected.text};
 }
 function costs(s,b){const n=s.buildings[b];return {17:20*n,6:2*n,0:3*n}}
+function useBuilding(s,building,now=Date.now()){
+ if(!buildingNames[building])return {ok:false,message:'Bina yok.'};
+ if(building==='home'){s.health=Math.min(100,s.health+10);s.energy=Math.min(100,s.energy+15);s.food=Math.max(0,s.food-2);s.water=Math.max(0,s.water-2);note(s,'Evde dinlendin.');return {ok:true,message:'Evde dinlendin; sağlık ve enerji yenilendi.'};}
+ if(building==='fire'){s.energy=Math.min(100,s.energy+25);s.health=Math.min(100,s.health+5);s.food=Math.max(0,s.food-1);s.water=Math.max(0,s.water-1);note(s,'Ateş alanında ısındın.');return {ok:true,message:'Ateş alanında ısındın.'};}
+ if(building==='farm'){
+   if(now<s.lastFarm+300000)return {ok:false,message:'Hasada henüz hazır değil; 5 dakikada yenilenir.'};
+   if(!s.inventory[2]&&used(s)>=capacity(s))return {ok:false,message:'Depoda yer yok.'};
+   s.inventory[2]+=s.buildings.farm*2;s.lastFarm=now;note(s,'Tarladan yiyecek toplandı.');return {ok:true,message:'Tarladan yiyecek toplandı.'};
+ }
+ if(s.buildings[building]>=5)return {ok:false,message:'En yüksek seviyede.'};
+ const c=costs(s,building);
+ if(Object.entries(c).some(([id,n])=>s.inventory[id]<n))return {ok:false,message:'Geliştirme malzemeleri eksik.'};
+ Object.entries(c).forEach(([id,n])=>s.inventory[id]-=n);s.buildings[building]++;note(s,buildingNames[building]+' geliştirildi.');return {ok:true,message:'Bina seviye '+s.buildings[building]};
+}
+function updateAchievements(s){
+ const done=new Set(s.achievements||[]),complete=s.quests.filter(q=>q.status==='complete').length,eventsDone=s.events.filter(e=>e.resolved).length,discovered=s.discovered.filter(Boolean).length;
+ const checks=[
+   ()=>s.inventory[9]>0,()=>[5,6,7,8,11,18].some(id=>s.inventory[id]>0),()=>s.inventory[12]>0,
+   ()=>Boolean(s.helper.job||s.helper.hand>=0),()=>Object.values(s.buildings).some(v=>v>1),()=>eventsDone>0,
+   ()=>discovered>=100,()=>complete>=10,()=>complete>=registry.quests.length,()=>s.chapter>=4,
+   ()=>s.skills.every(x=>x.level>0),()=>s.prestige>0,()=>s.regionsVisited.every(Boolean),()=>discovered>=200,
+   ()=>s.inventory.some(n=>n>=50),()=>s.day>=10&&s.health>10,()=>Object.values(s.buildings).every(v=>v>=3),
+   ()=>eventsDone>=12,()=>s.discovered.some((v,i)=>v&&recipes[i].level>=50),()=>done.size>=registry.achievements.length-1
+ ];
+ checks.forEach((check,id)=>{if(check()&&id<registry.achievements.length)done.add(id)});
+ s.achievements=[...done].filter(id=>id>=0&&id<registry.achievements.length).sort((a,b)=>a-b);return s.achievements;
+}
+function achievementStatus(s,id){return (s.achievements||[]).includes(id)?'unlocked':'locked'}
+function statistics(s){return {items:s.inventory.filter(n=>n>0).length,recipes:s.discovered.filter(Boolean).length,quests:s.quests.filter(q=>q.status==='complete').length,chapter:s.chapter+1,achievements:(s.achievements||[]).length}}
 function reduce(s,a,now=Date.now()){
- const no=message=>({ok:false,message});const yes=message=>({ok:true,message});
+ const no=message=>({ok:false,message});const yes=message=>{s.stats.actions++;updateAchievements(s);return {ok:true,message}};
  if(!a||typeof a.type!=='string')return no('Geçersiz işlem.');
  if(s.health<=0)return no('Yolculuğun sona erdi. Kayıt yükle veya yeni oyun başlat.');
  const ready=n=>s.energy>=n;
@@ -174,6 +211,7 @@ function reduce(s,a,now=Date.now()){
   if(s.helper[a.slot]>=0)s.inventory[s.helper[a.slot]]++;s.inventory[a.item]--;s.helper[a.slot]=a.item;
   if(s.tool===a.item&&!s.inventory[a.item])s.tool=-1;return yes('Kaya’nın ekipmanı güncellendi.');
  }
+ if(a.type==='building'){const result=useBuilding(s,a.building,now);if(result.ok){s.stats.actions++;updateAchievements(s)}return result;}
  if(a.type==='upgrade'){
   if(!buildingNames[a.building])return no('Bina yok.');if(s.buildings[a.building]>=5)return no('En yüksek seviyede.');
   const c=costs(s,a.building);if(!enough(c))return no('Geliştirme malzemeleri eksik.');take(c);s.buildings[a.building]++;note(s,buildingNames[a.building]+' geliştirildi.');return yes('Bina seviye '+s.buildings[a.building]);
@@ -181,12 +219,12 @@ function reduce(s,a,now=Date.now()){
  if(a.type==='harvest'){
   if(now<s.lastFarm+300000)return no('Hasada henüz hazır değil; 5 dakikada yenilenir.');s.inventory[2]+=s.buildings.farm*2;s.lastFarm=now;return yes('Tarladan yiyecek toplandı.');
  }
- if(a.type==='travel'){
+  if(a.type==='travel'){
   const to=a.region;if(!Number.isInteger(to)||to<0||to>3)return no('Bölge yok.');if(to===s.region)return no('Zaten buradasın.');
   if(to===1&&s.chapter<1)return no('Önce kıyıdaki görevleri tamamla.');
   if(to>=2&&(s.chapter<2||s.route!==to))return no('Önce Günlük’ten rotanı seç.');
   if(to===2&&!s.inventory[14])return no('Sıcak giysi gerekli.');if(to===3&&!s.inventory[13])return no('Meşale gerekli.');if(!ready(12))return no('Yolculuk için 12 enerji gerekli.');
-  spend(s,12);s.region=to;note(s,regions[to]+' bölgesine geldin.');return yes(regions[to]);
+  spend(s,12);s.region=to;s.regionsVisited[to]=true;note(s,regions[to]+' bölgesine geldin.');return yes(regions[to]);
  }
  if(a.type==='explore'){
   if(!ready(10))return no('Araştırmak için 10 enerji gerekli.');spend(s,10);
@@ -202,10 +240,10 @@ function reduce(s,a,now=Date.now()){
   else if(s.chapter===3){if(s.region!==0||!s.inventory[16])return no('Kıyıda işaret ateşi gerekli.');s.trust+=c===0?1:-2;s.chapter=4;s.ended=true;}
   else return no('Hikâye tamamlandı.');note(s,dialogue(s));return yes(objective(s));
  }
- if(a.type==='event')return applyEvent(s,a.event,a.choice,now);
- if(a.type==='quest')return completeQuest(s,a.quest,a.amount);
+ if(a.type==='event'){const result=applyEvent(s,a.event,a.choice,now);if(result.ok){s.stats.actions++;updateAchievements(s)}return result;}
+ if(a.type==='quest'){const result=completeQuest(s,a.quest,a.amount);if(result.ok){s.stats.actions++;if(result.message.startsWith('Görev tamamlandı'))s.stats.quests++;updateAchievements(s)}return result;}
  return no('Bilinmeyen işlem.');
 }
-const api={items,recipes,regions,buildingNames,skills:registry.skills,quests:registry.quests,events:registry.events,newGame,newGamePlus,validate,migrate,findRecipe,reduce,chance,capacity,used,objective,dialogue,costs,skillCheck,questStatus,completeQuest,applyEvent};
+const api={items,recipes,regions,buildingNames,skills:registry.skills,quests:registry.quests,events:registry.events,achievements:registry.achievements,newGame,newGamePlus,validate,migrate,findRecipe,reduce,chance,capacity,used,objective,dialogue,costs,skillCheck,questStatus,completeQuest,applyEvent,useBuilding,updateAchievements,achievementStatus,statistics};
 if(typeof module!=='undefined')module.exports=api;else root.Primal=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

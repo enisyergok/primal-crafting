@@ -99,6 +99,17 @@ for(let i=0;i<24;i++)events.push({id:i,name:eventNames[i%eventNames.length],regi
   {text:'Risk al ve araştır.',delta:{energy:-8,xp:15,trust:i%2?1:0}},
   {text:'Güvenli yolu seç.',delta:{energy:-3,item:(245+i)%343,amount:1}}
 ]});
+const achievementSeeds=[
+  ['İlk lokma','Ceviz etini üret.'],['Taşın sesi','İlk aletini üret.'],['Barınak kuruldu','İlk barınağı kur.'],
+  ['Kaya’nın ortağı','Yardımcıya bir görev ver.'],['Köyün temeli','Bir binayı geliştir.'],['İlk seçim','Bir olayın sonucunu seç.'],
+  ['Yüz tarif','100 farklı tarif keşfet.'],['Görev insanı','10 görevi tamamla.'],['Bütün yollar','87 görevi tamamla.'],
+  ['Bölüm sonu','Hikâyenin beş bölümünü tamamla.'],['Çok yönlü usta','15 becerinin tamamında seviye kazan.'],
+  ['Yeni çağ','Yeni oyun+ yolculuğuna başla.'],['Kıyı gezgini','Dört bölgeyi ziyaret et.'],['Usta zanaatkâr','200 tarif keşfet.'],
+  ['Dolu ambar','Bir kaynak yığınını 50 adede çıkar.'],['Hayatta kalan','Sağlığını 10’un üzerinde tutarak 10 gün geçir.'],
+  ['Köy bekçisi','Beş binayı da 3. seviyeye çıkar.'],['Olayların tanığı','12 farklı olayı çöz.'],
+  ['Derin kökler','5. seviye bir tarif üret.'],['Primal ustası','Tüm başarımları kazan.']
+];
+const achievements=achievementSeeds.map(([name,description],id)=>({id,name,description}));
 
 function validateRegistry(){
   if(items.length!==343||recipes.length!==237||quests.length!==87||skills.length!==15)throw Error('PRIMAL registry count mismatch');
@@ -115,5 +126,5 @@ function validateRegistry(){
   return true;
 }
 validateRegistry();
-return {items,recipes,skills,quests,events,categories,regionNames,validateRegistry};
+return {items,recipes,skills,quests,events,achievements,categories,regionNames,validateRegistry};
 });
