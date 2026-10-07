@@ -66,6 +66,17 @@ test('death and exhausted actions cannot produce resources',()=>{
  assert.ok(G);const s=G.newGame(1);s.energy=0;const a=JSON.stringify(s);assert.equal(G.reduce(s,{type:'gather'},1).ok,false);assert.equal(JSON.stringify(s),a);
  s.health=0;assert.equal(G.reduce(s,{type:'rest'},1).ok,false);
 });
+
+test('gathering exposes regional roots and targeted gathering reaches deep recipes',()=>{
+ const s=G.newGame(1);const options=G.gatherOptions(s);assert.ok(options.includes(0));
+ const deep=options.find(id=>id>=245);assert.ok(Number.isInteger(deep),'deep regional resource missing');
+ const before=JSON.stringify(s);s.energy=100;
+ assert.equal(G.reduce(s,{type:'gather',resource:deep},1).ok,true);
+ assert.equal(s.inventory[deep],2);
+ const unchanged=JSON.stringify(s);assert.equal(G.reduce(s,{type:'gather',resource:999},1).ok,false);assert.equal(JSON.stringify(s),unchanged);
+ assert.equal(G.newGame(1).inventory[15],0,'story lens must be discovered, not gifted');
+ assert.notEqual(before,JSON.stringify(s));
+});
 test('equipped axe wears out while lumberjacking',()=>{
  assert.ok(G);const s=G.newGame(1);s.inventory[11]=1;s.tool=11;s.durability[11]=1;
  assert.equal(G.reduce(s,{type:'gather',kind:'wood'},1).ok,true);assert.equal(s.inventory[17],2);assert.equal(s.inventory[11],0);assert.equal(s.tool,-1);

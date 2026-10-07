@@ -53,6 +53,9 @@ public final class SmokeTest extends Instrumentation {
         for(String tab:new String[]{"camp","recipes","helper","village","map","journal"}){click("[data-nav='"+tab+"']",tab);shot(tab);}
         click("[data-nav='village']","village");click("[data-building='home']");click("[data-building-action]");
         click("[data-nav='camp']","camp");evaluate("app.dispatch({type:'equip',item:0});app.dispatch({type:'craft',recipe:0});'ok'");
+        String gatheredBefore=evaluate("String(app.snapshot().inventory[0])");click("[data-gather]");
+        String gatheredAfter=evaluate("String(app.snapshot().inventory[0])");
+        if(gatheredBefore.equals(gatheredAfter))throw new AssertionError("tap gathering did not update inventory");
         String check=evaluate("(function(){try{app.dispatch({type:'equip',item:0});return JSON.stringify({app:typeof app,meat:app.snapshot().inventory[9],error:null})}catch(e){return JSON.stringify({app:typeof app,error:String(e),html:document.body.innerText.slice(0,200)})}})()");
         if(!check.contains("meat")||!check.contains(":1"))throw new AssertionError("craft did not update model: "+check);
         click("[data-nav='journal']","journal");click("[data-save='1']");
@@ -61,6 +64,6 @@ public final class SmokeTest extends Instrumentation {
         shot("final-journal");runOnMainSync(activity::finish);waitForIdleSync();
         activity=startActivitySync(new Intent(getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));waitForIdleSync();SystemClock.sleep(700);
         if(!evaluate("app.snapshot().inventory[9]===1").contains("true"))throw new AssertionError("restart lost save");
-        runOnMainSync(activity::finish);out.putString("stream","PASS: illustrated menus, crafting, helper, village, journal and saves\n");finish(Activity.RESULT_OK,out);
+        runOnMainSync(activity::finish);out.putString("stream","PASS: illustrated menus, gathering, crafting, helper, village, journal and saves\n");finish(Activity.RESULT_OK,out);
     }catch(Throwable e){out.putString("stream","FAIL: "+e+"\n");if(activity!=null)runOnMainSync(activity::finish);finish(Activity.RESULT_CANCELED,out);}}
 }

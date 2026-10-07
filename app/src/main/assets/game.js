@@ -8,9 +8,10 @@ const regions=registry.regionNames;
 const buildingNames={home:'Ev',depot:'Depo',workshop:'Atölye',farm:'Tarla',fire:'Ateş Alanı'};
 const capacity=s=>16+s.buildings.depot*8;
 const used=s=>s.inventory.filter(n=>n>0).length;
+function gatherOptions(s){return registry.items.filter(item=>item.gatherable&&item.id!==15&&item.region===s.region).map(item=>item.id)}
 const chance=(s,r)=>Math.max(25,Math.min(100,100+(s.skill-r.level)*5+(s.tool===11||s.tool===18?5:0)));
 function newGame(now=Date.now()){
- const inventory=Array(items.length).fill(0);inventory[0]=3;inventory[1]=5;inventory[2]=2;inventory[3]=8;inventory[4]=6;inventory[15]=1;inventory[17]=0;
+ const inventory=Array(items.length).fill(0);inventory[0]=3;inventory[1]=5;inventory[2]=2;inventory[3]=8;inventory[4]=6;inventory[17]=0;
  return {version:3,inventory,health:100,food:80,water:80,energy:100,day:1,minutes:480,
  chapter:0,region:0,trust:0,route:-1,searches:0,expeditions:0,storyBeat:0,metMira:false,ate:false,lens:false,ended:false,introduced:false,
   skill:12,skills:registry.skills.map(()=>({level:0,xp:0})),technologies:registry.technologies.map((_,i)=>i===0),tool:-1,durability:{},rng:now>>>0||1234567,discovered:recipes.map((_,i)=>i<3),
@@ -210,8 +211,11 @@ function reduce(s,a,now=Date.now()){
  if(a.type==='gather'){
   if(!ready(8))return no('Toplamak için 8 enerji gerekli.');
   if(a.kind==='wood'&&(s.tool!==11||!s.inventory[11]))return no('Odun kesmek için taş baltanı ele tak.');
-  const drops=[[0,1,2,3,4],[1,4,3,0,2],[0,1,4],[0,1,0,4]];
-  const id=a.kind==='wood'?17:drops[s.region][s.searches%drops[s.region].length];
+  const options=gatherOptions(s);
+  if(!options.length)return no('Bu bölgede toplanacak kaynak kalmadı.');
+  const requested=a.resource===undefined?null:Number(a.resource);
+  if(requested!==null&&(!Number.isInteger(requested)||!options.includes(requested)))return no('Bu kaynak bulunduğun bölgede toplanamaz.');
+  const id=a.kind==='wood'?17:(requested===null?options[s.searches%options.length]:requested);
   if(!s.inventory[id]&&used(s)>=capacity(s))return no('Depo dolu.');spend(s,8);s.searches++;s.inventory[id]+=2;s.stats.gathered+=2;advanceQuests(s,'gather',id,2);if(a.kind==='wood')wear(s,11);
   if(s.chapter===1&&s.region===1)s.metMira=true;if(s.searches%2===0)triggerEvent(s,'toplama');return yes(items[id]+' +2');
  }
@@ -273,6 +277,6 @@ function reduce(s,a,now=Date.now()){
  if(a.type==='quest')return no('Görevler yaptığın eylemlerle ilerler; günlükten hedefi takip et.');
  return no('Bilinmeyen işlem.');
 }
-const api={items,recipes,regions,buildingNames,skills:registry.skills,technologies:registry.technologies,quests:registry.quests,events:registry.events,achievements:registry.achievements,storyBeats:registry.storyBeats,newGame,newGamePlus,validate,migrate,findRecipe,reduce,chance,capacity,used,objective,dialogue,costs,skillCheck,technologyCost,unlockTechnology,questStatus,completeQuest,advanceQuests,triggerEvent,helperCapacity,helperAmount,applyEvent,useBuilding,updateAchievements,achievementStatus,statistics};
+const api={items,recipes,regions,buildingNames,skills:registry.skills,technologies:registry.technologies,quests:registry.quests,events:registry.events,achievements:registry.achievements,storyBeats:registry.storyBeats,newGame,newGamePlus,validate,migrate,findRecipe,reduce,chance,capacity,used,gatherOptions,objective,dialogue,costs,skillCheck,technologyCost,unlockTechnology,questStatus,completeQuest,advanceQuests,triggerEvent,helperCapacity,helperAmount,applyEvent,useBuilding,updateAchievements,achievementStatus,statistics};
 if(typeof module!=='undefined')module.exports=api;else root.Primal=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
