@@ -5,6 +5,9 @@ import android.os.Bundle;
 import android.content.*;
 import android.view.*;
 import android.widget.*;
+import android.graphics.Bitmap;
+import java.io.FileOutputStream;
+import java.io.File;
 
 /** Real device smoke checks, without third-party test dependencies. */
 public class SmokeTest extends Instrumentation {
@@ -15,7 +18,7 @@ public class SmokeTest extends Instrumentation {
         GameState initial=new GameState();initial.introduced=true;
         getTargetContext().getSharedPreferences("primal-story",0).edit().clear().putString("auto",initial.save()).commit();
         Activity a=startActivitySync(new Intent(getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));waitForIdleSync();
-        for(String tab:new String[]{"Üretim","Günlük","Harita","Kayıt","Envanter"})click(a,tab);
+        for(String tab:new String[]{"Üretim","Günlük","Harita","Kayıt","Envanter"}){click(a,tab);Bitmap shot=getUiAutomation().takeScreenshot();if(shot!=null){try(FileOutputStream out=new FileOutputStream(new File(getTargetContext().getExternalFilesDir(null),tab+".png"))){shot.compress(Bitmap.CompressFormat.PNG,100,out);}shot.recycle();}}
         click(a,"Üretim");click(a,GameState.RECIPES[0]+"\n"+GameState.COSTS[0]);click(a,"Envanter");click(a,"Ceviz eti ye");click(a,"Kayıt");click(a,"Şimdi elle kaydet");
         GameState saved=GameState.load(getTargetContext().getSharedPreferences("primal-story",0).getString("manual",""));if(!saved.ate||saved.inventory[2]!=1||saved.inventory[10]!=1)throw new AssertionError("UI actions did not persist");
         runOnMainSync(a::finish);waitForIdleSync();

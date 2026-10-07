@@ -63,6 +63,13 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      - name: Upload device screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: primal-device-screenshots
+          path: build/screenshots
+          if-no-files-found: error
+
       - name: Add APK to job summary
         run: |
           echo "## PRIMAL APK" >> "$GITHUB_STEP_SUMMARY"
