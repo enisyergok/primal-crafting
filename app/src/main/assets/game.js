@@ -12,7 +12,7 @@ const chance=(s,r)=>Math.max(25,Math.min(100,100+(s.skill-r.level)*5+(s.tool===1
 function newGame(now=Date.now()){
  const inventory=Array(items.length).fill(0);inventory[0]=3;inventory[1]=5;inventory[2]=2;inventory[3]=8;inventory[4]=6;inventory[15]=1;inventory[17]=0;
  return {version:3,inventory,health:100,food:80,water:80,energy:100,day:1,minutes:480,
- chapter:0,region:0,trust:0,route:-1,searches:0,expeditions:0,metMira:false,ate:false,lens:false,ended:false,introduced:false,
+ chapter:0,region:0,trust:0,route:-1,searches:0,expeditions:0,storyBeat:0,metMira:false,ate:false,lens:false,ended:false,introduced:false,
   skill:12,skills:registry.skills.map(()=>({level:0,xp:0})),technologies:registry.technologies.map((_,i)=>i===0),tool:-1,durability:{},rng:now>>>0||1234567,discovered:recipes.map((_,i)=>i<3),
   quests:registry.quests.map((q,i)=>({id:q.id,status:i<3?'active':'locked',progress:0})),events:registry.events.map((e,i)=>({id:e.id,resolved:false,active:i===0})),achievements:[],prestige:0,
   stats:{actions:0,gathered:0,crafted:0,events:0,quests:0},regionsVisited:[true,false,false,false],
@@ -25,7 +25,7 @@ function validate(s){
  const num=(n,min,max)=>Number.isFinite(n)&&Number.isInteger(n)&&n>=min&&n<=max;
  if(!s.inventory.every(n=>num(n,0,1000000)))bad();
  for(const key of ['health','food','water','energy'])if(!num(s[key],0,100))bad();
- for(const [key,min,max] of [['day',1,1000000],['minutes',0,1439],['chapter',0,4],['region',0,3],['route',-1,3],['skill',0,100],['tool',-1,19],['searches',0,1000000],['expeditions',0,3],['trust',-10,10],['rng',0,4294967295]])if(!num(s[key],min,max))bad();
+ for(const [key,min,max] of [['day',1,1000000],['minutes',0,1439],['chapter',0,4],['region',0,3],['route',-1,3],['skill',0,100],['tool',-1,19],['searches',0,1000000],['expeditions',0,3],['storyBeat',0,registry.storyBeats.length-1],['trust',-10,10],['rng',0,4294967295]])if(!num(s[key],min,max))bad();
  if(!s.buildings||!s.helper||!s.durability||!Array.isArray(s.discovered)||s.discovered.length!==recipes.length||!s.discovered.every(b=>typeof b==='boolean'))bad();
  if(!Array.isArray(s.skills)||s.skills.length!==registry.skills.length||!s.skills.every(x=>x&&num(x.level,0,20)&&num(x.xp,0,1000000)))bad();
  if(!Array.isArray(s.technologies)||s.technologies.length!==registry.technologies.length||!s.technologies.every(x=>typeof x==='boolean'))bad();
@@ -44,7 +44,7 @@ function validate(s){
 }
 function migrate(old){
  const s=newGame();
- for(const k of ['health','food','water','energy','chapter','region','trust','route','day','minutes','searches','expeditions','metMira','ate','lens','ended','introduced','prestige','lastFarm'])if(old[k]!==undefined)s[k]=old[k];
+ for(const k of ['health','food','water','energy','chapter','region','trust','route','day','minutes','searches','expeditions','storyBeat','metMira','ate','lens','ended','introduced','prestige','lastFarm'])if(old[k]!==undefined)s[k]=old[k];
  if(Array.isArray(old.inventory))old.inventory.slice(0,20).forEach((n,i)=>s.inventory[i]=n);
  if(Array.isArray(old.journal))s.journal=old.journal.slice(-80);
  if(Array.isArray(old.skills)&&old.skills.length===s.skills.length)s.skills=old.skills.map(x=>({level:Number(x.level)||0,xp:Number(x.xp)||0}));
@@ -66,7 +66,7 @@ function spend(s,n){s.energy-=n;s.food=Math.max(0,s.food-2);s.water=Math.max(0,s
 function rand(s){let x=s.rng;x^=x<<13;x^=x>>>17;x^=x<<5;s.rng=x>>>0;return s.rng/4294967296}
 function wear(s,id){if(id!==11&&id!==18)return;s.durability[id]=(s.durability[id]||25)-1;if(s.durability[id]<=0){s.inventory[id]--;s.durability[id]=s.inventory[id]>0?25:0;if(!s.inventory[id])s.tool=-1;note(s,items[id]+' aşındı ve kırıldı.')}}
 function objective(s){return ['Ateş ve su kabı üret, ceviz etini ye. Sonra Mira’ya cevap ver.','Ormanda Mira’yı bul. Taş balta ve barınak üret.','Kar ya da volkan rotasını seç. Hazırlan ve üç kez araştır.','Kıyıya dön. Mercekle işaret ateşi üret ve kararını ver.','Hikâye tamamlandı. Köyünü büyütmeye devam edebilirsin.'][s.chapter]}
-function dialogue(s){return [
+function dialogue(s){const beat=registry.storyBeats[s.storyBeat];if(beat&&beat.chapter===s.chapter)return beat.speaker+': '+beat.text;return [
  'Akın: Önce ateşi ve su kabını hazırlayalım. Bir taşı eline alıp cevizi kır; kabuğunu sakla. Ormandaki çağrıya güçlü çıkmalısın.',
  s.metMira?'Mira: Bacağım yaralı. Kuledeki mercekle gemilere işaret verebiliriz. Beni yanında götürecek misin?':'Akın: Baltanı hazırla. Ormanda yardım isteyen birini duydum.',
  s.route<0?'Mira: Kuleye iki yol var. Kar geçidinde sıcak giysi, volkan yolunda meşale gerekecek. Hangisini seçiyorsun?':'Mira: Seçtiğin yolda üç araştırma bizi gözcü kulesine ulaştıracak.',
@@ -261,18 +261,18 @@ function reduce(s,a,now=Date.now()){
   if(s.chapter===2&&s.route===s.region&&s.route>=2){s.expeditions++;if(s.expeditions>=3){s.lens=true;s.inventory[15]=1;triggerEvent(s,'kule araştırması');s.chapter=3;note(s,'İşaret merceği bulundu!');return yes('Merceği kıyıya götür.')}if(s.expeditions%2===0)triggerEvent(s,'keşif');return yes('Kuleye yaklaşım '+s.expeditions+'/3');}
   return yes(objective(s));
  }
- if(a.type==='choice'){
+  if(a.type==='choice'){
   if(a.choice!==0&&a.choice!==1)return no('Seçim yok.');const c=a.choice;
   if(s.chapter===0){if(!s.inventory[7]||!s.inventory[8]||!s.ate)return no('Önce ateş, su kabı ve yemek görevleri.');s.trust+=c===0?1:0;s.chapter=1;}
   else if(s.chapter===1){if(!s.metMira||!s.inventory[11]||!s.inventory[12])return no('Mira’yı bul; balta ve barınak üret.');s.trust+=c===0?2:-1;s.chapter=2;}
   else if(s.chapter===2){if(s.route>=0)return no('Rotan zaten seçildi.');s.route=c===0?2:3;s.expeditions=0;}
   else if(s.chapter===3){if(s.region!==0||!s.inventory[16])return no('Kıyıda işaret ateşi gerekli.');s.trust+=c===0?1:-2;s.chapter=4;s.ended=true;}
-  else return no('Hikâye tamamlandı.');note(s,dialogue(s));return yes(objective(s));
+  else return no('Hikâye tamamlandı.');s.storyBeat=Math.min(registry.storyBeats.length-1,s.storyBeat+1);note(s,dialogue(s));return yes(objective(s));
  }
  if(a.type==='event'){const result=applyEvent(s,a.event,a.choice,now);if(result.ok){s.stats.actions++;updateAchievements(s)}return result;}
  if(a.type==='quest')return no('Görevler yaptığın eylemlerle ilerler; günlükten hedefi takip et.');
  return no('Bilinmeyen işlem.');
 }
-const api={items,recipes,regions,buildingNames,skills:registry.skills,technologies:registry.technologies,quests:registry.quests,events:registry.events,achievements:registry.achievements,newGame,newGamePlus,validate,migrate,findRecipe,reduce,chance,capacity,used,objective,dialogue,costs,skillCheck,technologyCost,unlockTechnology,questStatus,completeQuest,advanceQuests,triggerEvent,helperCapacity,helperAmount,applyEvent,useBuilding,updateAchievements,achievementStatus,statistics};
+const api={items,recipes,regions,buildingNames,skills:registry.skills,technologies:registry.technologies,quests:registry.quests,events:registry.events,achievements:registry.achievements,storyBeats:registry.storyBeats,newGame,newGamePlus,validate,migrate,findRecipe,reduce,chance,capacity,used,objective,dialogue,costs,skillCheck,technologyCost,unlockTechnology,questStatus,completeQuest,advanceQuests,triggerEvent,helperCapacity,helperAmount,applyEvent,useBuilding,updateAchievements,achievementStatus,statistics};
 if(typeof module!=='undefined')module.exports=api;else root.Primal=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

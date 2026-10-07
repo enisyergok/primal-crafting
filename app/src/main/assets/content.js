@@ -114,6 +114,20 @@ const achievementSeeds=[
   ['Derin kökler','5. seviye bir tarif üret.'],['Primal ustası','Tüm başarımları kazan.']
 ];
 const achievements=achievementSeeds.map(([name,description],id)=>({id,name,description}));
+const storyBeats=[
+  {id:0,chapter:0,speaker:'Akın',text:'Fırtına dindi. Kıyıda bulduğun her şey bir iz bırakır; önce ateşi kur, sonra suyu güvene al.'},
+  {id:1,chapter:0,speaker:'Sen',text:'Kıyıdaki kabukları ve dalları ayırdın. Açlığın hafifleyince uzaktan gelen bir çığlık duydun.'},
+  {id:2,chapter:1,speaker:'Mira',text:'Ormanın içinden geldim. Kuleye giden yol kapanmış; bizi oraya ulaştıracak bir balta ve sağlam bir barınak gerek.'},
+  {id:3,chapter:1,speaker:'Akın',text:'Mira güvenini hemen vermiyor. Yardım etmek için önce onun izlerini takip etmelisin.'},
+  {id:4,chapter:2,speaker:'Mira',text:'Kar geçidi sessiz, volkan yolu ise sıcak. İkisi de aynı kuleye çıkar ama hazırlığın farklı olmalı.'},
+  {id:5,chapter:2,speaker:'Sen',text:'Haritana iki yol çizdin. Seçimin sadece rotayı değil, köyün gelecekteki kaynaklarını da değiştirecek.'},
+  {id:6,chapter:2,speaker:'Akın',text:'Her araştırma bizi gözcü kulesine yaklaştırıyor. Acele etme; enerji, su ve ateş olmadan yol seni yarı yolda bırakır.'},
+  {id:7,chapter:3,speaker:'Mira',text:'Mercek bulundu. Şimdi kıyıya dönüp işaret ateşini yakmalıyız; ufuktaki gemi çok uzun beklemeyecek.'},
+  {id:8,chapter:3,speaker:'Sen',text:'Köyde kalanların yüzleri aklına geldi. Kurtuluş sadece senin kararın olmayacak.'},
+  {id:9,chapter:4,speaker:'Akın',text:'Ateş göğe yükseldi. Bu yolculuk bitti sanıyorsun ama kurduğun her bina yeni bir hikâyenin başlangıcı.'},
+  {id:10,chapter:4,speaker:'Mira',text:'Yeni kıyılar, yeni tarifler ve yeni sorular var. Ustalık, vardığın yerde durmak değil, öğrendiğini paylaşmaktır.'},
+  {id:11,chapter:4,speaker:'Sen',text:'İkinci yolculuk için çantanı hazırladın. Bu kez ada seni değil, sen adayı değiştireceksin.'}
+];
 
 function validateRegistry(){
   if(items.length!==343||recipes.length!==237||quests.length!==87||skills.length!==15)throw Error('PRIMAL registry count mismatch');
@@ -130,5 +144,5 @@ function validateRegistry(){
   return true;
 }
 validateRegistry();
-return {items,recipes,skills,technologies,quests,events,achievements,categories,regionNames,validateRegistry};
+return {items,recipes,skills,technologies,quests,events,achievements,storyBeats,categories,regionNames,validateRegistry};
 });
