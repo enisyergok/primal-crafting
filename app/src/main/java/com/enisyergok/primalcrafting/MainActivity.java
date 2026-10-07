@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.Build;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.Insets;
 import android.view.Window;
 import android.view.WindowInsets;
 import android.webkit.JavascriptInterface;
@@ -35,7 +36,7 @@ public final class MainActivity extends Activity {
         web.setBackgroundColor(Color.rgb(38,28,18));
         web.setFitsSystemWindows(true);
         if(Build.VERSION.SDK_INT>=30)web.setOnApplyWindowInsetsListener((view,insets)->{
-            WindowInsets.Insets bars=insets.getInsets(WindowInsets.Type.systemBars());
+        Insets bars=insets.getInsets(WindowInsets.Type.systemBars());
             view.setPadding(0,bars.top,0,bars.bottom);
             return insets;
         });
