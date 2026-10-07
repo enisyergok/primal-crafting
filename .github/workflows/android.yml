@@ -32,15 +32,15 @@ jobs:
         with:
           gradle-version: '8.11.1'
 
-      - name: Build debug APK
-        run: gradle --no-daemon assembleDebug assembleDebugAndroidTest
+      - name: Build debug and signed release APKs
+        run: gradle --no-daemon assembleDebug assembleRelease assembleDebugAndroidTest
 
       - name: Verify both story endings and saves
         run: |
           mkdir -p build/story-tests
           javac -encoding UTF-8 -d build/story-tests app/src/main/java/com/enisyergok/primalcrafting/GameState.java tests/GameStateTest.java
           java -cp build/story-tests GameStateTest
-          node --test tests/content.test.cjs tests/game.test.cjs tests/progression.test.cjs tests/systems.test.cjs
+          node --test tests/content.test.cjs tests/game.test.cjs tests/progression.test.cjs tests/systems.test.cjs tests/depth.test.cjs
 
       - name: Enable emulator acceleration
         run: |
@@ -64,6 +64,14 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      - name: Upload release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: primal-crafting-release-apk
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Upload device screenshots
         uses: actions/upload-artifact@v4
         with:
@@ -75,3 +83,4 @@ jobs:
         run: |
           echo "## PRIMAL APK" >> "$GITHUB_STEP_SUMMARY"
           echo "Debug APK artifact: **primal-crafting-debug-apk**" >> "$GITHUB_STEP_SUMMARY"
+          echo "Installable release APK artifact: **primal-crafting-release-apk**" >> "$GITHUB_STEP_SUMMARY"

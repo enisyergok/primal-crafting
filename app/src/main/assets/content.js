@@ -84,13 +84,17 @@ for(let output=20;output<=244;output++){
 
 const skillNames=['Üretim','Toplayıcılık','Odunculuk','Avcılık','Balıkçılık','Aşçılık','Dokumacılık','Taş işçiliği','Şifacılık','İnşaat','Haritacılık','Takas','İz sürme','Dayanıklılık','Ustalık'];
 const skills=skillNames.map((name,id)=>({id,name,maxLevel:20,xpPerLevel:100+id*20}));
+const technologies=skills.map((skill,id)=>({id,name:`${skill.name} yolu`,description:`${skill.name} uzmanlığını aç; ilgili tarifleri ve pasif bonusu güçlendir.`,prerequisites:id===0?[]:[id-1],skill:id,cost:{17:10+id*3,6:1+Math.floor(id/3),0:2+id}}));
 const quests=[];
 const questVerbs=['topla','üret','keşfet','götür','yardım et','geliştir','öğren','takas et','hazırla','tamamla'];
+const questKinds=['craft','gather','explore','build','event'];
+const questBuildTargets=['home','workshop','farm','fire','depot'];
 for(let i=0;i<87;i++){
   const chapter=Math.min(4,Math.floor(i/18));
-  const target=i<recipes.length?recipes[i%recipes.length].output:0;
+  const type=questKinds[i%questKinds.length];
+  const target=type==='craft'?recipes[i%recipes.length].output:type==='gather'?[0,1,2,3,4,17][i%6]:type==='explore'?i%4:type==='build'?questBuildTargets[i%questBuildTargets.length]:i%24;
   quests.push({id:i,name:`${regionNames[chapter%4]} görevi ${i+1}: ${questVerbs[i%questVerbs.length]}`,
-    chapter,type:i%5===0?'choice':i%3===0?'explore':'craft',target,amount:1+(i%4),
+    chapter,type,target,amount:1+(i%4),
     prerequisites:i===0?[]:[Math.max(0,i-1)],reward:{xp:25+i*5,skill:i%15,item:(20+i)%343,amount:1}});
 }
 const events=[];
@@ -126,5 +130,5 @@ function validateRegistry(){
   return true;
 }
 validateRegistry();
-return {items,recipes,skills,quests,events,achievements,categories,regionNames,validateRegistry};
+return {items,recipes,skills,technologies,quests,events,achievements,categories,regionNames,validateRegistry};
 });
