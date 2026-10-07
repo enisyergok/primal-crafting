@@ -4,7 +4,24 @@ const P=globalThis.Primal;let state=load();let page='camp';let selectedRecipe=0;
 const $=s=>document.querySelector(s), esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const icon=(id,cls='')=>`<span class="sprite ${cls}" style="background-position:${(id%6)*20}% ${Math.floor(id/6)*33.333}%" aria-hidden="true"></span>`;
 const button=(label,attrs='',cls='secondary')=>`<button class="${cls}" ${attrs}>${label}</button>`;
-function load(){try{const raw=globalThis.AndroidStore?AndroidStore.read('auto'):localStorage.getItem('primal-auto');if(!raw)return P.newGame(Date.now());try{return P.validate(JSON.parse(raw))}catch(jsonError){if(raw.includes('version=1')){const old={inventory:[],journal:[]};raw.split(/\r?\n/).forEach(line=>{const m=line.match(/^v(\d+)=(.*)$/);if(m)old[['chapter','region','health','food','water','energy','minutes','day','trust','route','searches'][+m[1]]=+m[2]);const i=line.match(/^i(\d+)=(.*)$/);if(i)old.inventory[+i[1]]=+i[2]});const migrated=P.migrate(old);notice='Eski kayıt yeni sisteme aktarıldı.';return migrated}throw jsonError}}catch(e){notice=e.message;return P.newGame(Date.now())}}
+function load(){
+  try {
+    const raw=globalThis.AndroidStore?AndroidStore.read('auto'):localStorage.getItem('primal-auto');
+    if(!raw)return P.newGame(Date.now());
+    try{return P.validate(JSON.parse(raw));}
+    catch(jsonError){
+      if(raw.includes('version=1')){
+        const old={inventory:[],journal:[]};
+        raw.split(/\r?\n/).forEach(line=>{
+          const m=line.match(/^v(\d+)=(.*)$/);if(m)old[['chapter','region','health','food','water','energy','minutes','day','trust','route','searches'][+m[1]]=+m[2];
+          const i=line.match(/^i(\d+)=(.*)$/);if(i)old.inventory[+i[1]]=+i[2];
+        });
+        notice='Eski kayıt yeni sisteme aktarıldı.';return P.migrate(old);
+      }
+      throw jsonError;
+    }
+  } catch(e){notice=e.message;return P.newGame(Date.now());}
+}
 function save(slot='auto'){const raw=JSON.stringify(state);try{if(globalThis.AndroidStore)AndroidStore.write(slot,raw);else localStorage.setItem('primal-'+slot,raw)}catch(e){notice='Kayıt yazılamadı.'}}
 function snapshot(){return JSON.parse(JSON.stringify(state))}
 function dispatch(action){return act(action)}
