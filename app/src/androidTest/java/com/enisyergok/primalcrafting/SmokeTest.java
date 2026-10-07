@@ -27,7 +27,8 @@ public final class SmokeTest extends Instrumentation {
         activity=startActivitySync(new Intent(getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));waitForIdleSync();SystemClock.sleep(700);
         for(String tab:new String[]{"camp","recipes","helper","village","journal"}){click("[data-nav='"+tab+"']");shot(tab);}
         click("[data-nav='camp']");evaluate("app.dispatch({type:'equip',item:0});app.dispatch({type:'craft',recipe:0});'ok'");
-        if(!evaluate("app.snapshot().inventory[9]===1").contains("true"))throw new AssertionError("craft did not update model: "+evaluate("JSON.stringify(app.snapshot())"));
+        String check=evaluate("(function(){try{app.dispatch({type:'equip',item:0});return JSON.stringify({app:typeof app,meat:app.snapshot().inventory[9],error:null})}catch(e){return JSON.stringify({app:typeof app,error:String(e),html:document.body.innerText.slice(0,200)})}})()");
+        if(!check.contains("\"meat\":1"))throw new AssertionError("craft did not update model: "+check);
         click("[data-nav='journal']");click("[data-save='1']");if(!evaluate("AndroidStore.read('manual').length>0").contains("true"))throw new AssertionError("manual save missing");
         shot("final-journal");runOnMainSync(activity::finish);waitForIdleSync();
         activity=startActivitySync(new Intent(getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));waitForIdleSync();SystemClock.sleep(700);
