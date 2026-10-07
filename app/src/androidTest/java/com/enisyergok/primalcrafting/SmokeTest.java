@@ -1,31 +1,37 @@
 package com.enisyergok.primalcrafting;
 
 import android.app.*;
-import android.os.Bundle;
+import android.os.*;
 import android.content.*;
-import android.view.*;
-import android.widget.*;
+import android.webkit.WebView;
 import android.graphics.Bitmap;
-import java.io.FileOutputStream;
-import java.io.File;
+import java.io.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-/** Real device smoke checks, without third-party test dependencies. */
-public class SmokeTest extends Instrumentation {
+/** Device smoke checks the actual illustrated WebView surface and save bridge. */
+public final class SmokeTest extends Instrumentation {
+    private Activity activity;
+    private String evaluate(String expression) {
+        CountDownLatch latch=new CountDownLatch(1); final String[] result={""};
+        runOnMainSync(()->{WebView w=findWebView(activity.getWindow().getDecorView());if(w==null)throw new AssertionError("WebView missing");w.evaluateJavascript(expression,v->{result[0]=v;latch.countDown();});});
+        try{if(!latch.await(5,TimeUnit.SECONDS))throw new AssertionError("JS timeout");}catch(InterruptedException e){throw new AssertionError(e);}
+        return result[0];
+    }
+    private WebView findWebView(android.view.View v){if(v instanceof WebView)return (WebView)v;if(v instanceof android.view.ViewGroup){android.view.ViewGroup g=(android.view.ViewGroup)v;for(int i=0;i<g.getChildCount();i++){WebView w=findWebView(g.getChildAt(i));if(w!=null)return w;}}return null;}
+    private void click(String selector){evaluate("document.querySelector('"+selector+"').click();'ok'");waitForIdleSync();}
+    private void shot(String name){Bitmap b=getUiAutomation().takeScreenshot();if(b!=null){try(FileOutputStream o=new FileOutputStream(new File(getTargetContext().getExternalFilesDir(null),name+".png"))){b.compress(Bitmap.CompressFormat.PNG,100,o);}catch(IOException e){throw new AssertionError(e);}b.recycle();}}
     @Override public void onCreate(Bundle b){super.onCreate(b);start();}
-    private View find(View v,String text){if(v instanceof Button&&text.equals(((Button)v).getText().toString()))return v;if(v instanceof ViewGroup){ViewGroup g=(ViewGroup)v;for(int i=0;i<g.getChildCount();i++){View r=find(g.getChildAt(i),text);if(r!=null)return r;}}return null;}
-    private void click(Activity a,String text){runOnMainSync(()->{View v=find(a.getWindow().getDecorView(),text);if(v==null)throw new AssertionError("Button missing: "+text);v.performClick();});waitForIdleSync();CountDownLatch frames=new CountDownLatch(1);runOnMainSync(()->a.getWindow().getDecorView().postOnAnimation(()->a.getWindow().getDecorView().postOnAnimation(frames::countDown)));try{if(!frames.await(5,TimeUnit.SECONDS))throw new AssertionError("UI frame timeout");}catch(InterruptedException e){throw new AssertionError(e);}}
-    @Override public void onStart(){Bundle result=new Bundle();try{
-        GameState initial=new GameState();initial.introduced=true;
-        getTargetContext().getSharedPreferences("primal-story",0).edit().clear().putString("auto",initial.save()).commit();
-        Activity a=startActivitySync(new Intent(getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));waitForIdleSync();
-        for(String tab:new String[]{"Üretim","Günlük","Harita","Kayıt","Envanter"}){click(a,tab);Bitmap shot=getUiAutomation().takeScreenshot();if(shot!=null){try(FileOutputStream out=new FileOutputStream(new File(getTargetContext().getExternalFilesDir(null),tab+".png"))){shot.compress(Bitmap.CompressFormat.PNG,100,out);}shot.recycle();}}
-        click(a,"Üretim");click(a,GameState.RECIPES[0]+"\n"+GameState.COSTS[0]);click(a,"Envanter");click(a,"Ceviz eti ye");click(a,"Kayıt");click(a,"Şimdi elle kaydet");
-        GameState saved=GameState.load(getTargetContext().getSharedPreferences("primal-story",0).getString("manual",""));if(!saved.ate||saved.inventory[2]!=1||saved.inventory[10]!=1)throw new AssertionError("UI actions did not persist");
-        runOnMainSync(a::finish);waitForIdleSync();
-        Activity reopened=startActivitySync(new Intent(getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));waitForIdleSync();click(reopened,"Günlük");
-        GameState loaded=GameState.load(getTargetContext().getSharedPreferences("primal-story",0).getString("auto",""));if(!loaded.ate)throw new AssertionError("Restart lost save");
-        runOnMainSync(reopened::finish);result.putString("stream","PASS: menus, crafting, eating, manual/auto saves and restart\n");finish(Activity.RESULT_OK,result);
-    }catch(Throwable e){result.putString("stream","FAIL: "+e.toString()+"\n");finish(Activity.RESULT_CANCELED,result);}}
+    @Override public void onStart(){Bundle out=new Bundle();try{
+        getTargetContext().getSharedPreferences("primal-story",0).edit().clear().commit();
+        activity=startActivitySync(new Intent(getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));waitForIdleSync();SystemClock.sleep(700);
+        for(String tab:new String[]{"camp","recipes","helper","village","journal"}){click("[data-nav='"+tab+"']");shot(tab);}
+        click("[data-nav='camp']");click("#tool-select");evaluate("document.querySelector('#tool-select').value='0';document.querySelector('#tool-select').dispatchEvent(new Event('change'));'ok'");click("[data-item='2']");click("[data-nav='recipes']");click("[data-open-recipe='0']");click("#craft-now");
+        if(!evaluate("app.snapshot().inventory[9]===1").contains("true"))throw new AssertionError("craft did not update model");
+        click("[data-nav='journal']");click("[data-save='1']");if(!evaluate("AndroidStore.read('manual').length>0").contains("true"))throw new AssertionError("manual save missing");
+        shot("final-journal");runOnMainSync(activity::finish);waitForIdleSync();
+        activity=startActivitySync(new Intent(getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));waitForIdleSync();SystemClock.sleep(700);
+        if(!evaluate("app.snapshot().inventory[9]===1").contains("true"))throw new AssertionError("restart lost save");
+        runOnMainSync(activity::finish);out.putString("stream","PASS: illustrated menus, crafting, helper, village, journal and saves\n");finish(Activity.RESULT_OK,out);
+    }catch(Throwable e){out.putString("stream","FAIL: "+e+"\n");if(activity!=null)runOnMainSync(activity::finish);finish(Activity.RESULT_CANCELED,out);}}
 }
