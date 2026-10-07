@@ -58,7 +58,7 @@ public class MainActivity extends Activity {
         if(game.health<=0){body.addView(label("Yolculuk sona erdi. Elle kaydını yükleyebilir veya yeni oyun başlatabilirsin.",18));addButton("Kayıt menüsü",()->open("Kayıt"));}
         switch(page){case "Üretim":crafting();break;case "Günlük":story();break;case "Harita":map();break;case "Kayıt":settings();break;case "Keşif":explore();break;default:inventory();}
         body.addView(label("Görev: "+game.objective(),14));
-        HorizontalScrollView navScroll=new HorizontalScrollView(this);LinearLayout nav=new LinearLayout(this);navScroll.addView(nav);for(String name:new String[]{"Envanter","Üretim","Günlük","Harita","Kayıt"})nav.addView(button(name,()->open(name)),new LinearLayout.LayoutParams(dp(92),dp(52)));root.addView(navScroll);
+        LinearLayout nav=new LinearLayout(this);for(String name:new String[]{"Envanter","Üretim","Günlük","Harita","Kayıt"}){Button tab=button(name,()->open(name));tab.setTextSize(12);tab.setPadding(dp(2),dp(6),dp(2),dp(6));tab.setMinimumWidth(0);nav.addView(tab,new LinearLayout.LayoutParams(0,-2,1));}root.addView(nav);
     }
     private void inventory(){
         int columns=getResources().getConfiguration().screenWidthDp<360?2:3;

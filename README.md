@@ -31,7 +31,7 @@ Kaynak görsel 495×755 pikseldir; yüksek çözünürlüklü çizim kalitesi va
 
 `tests/GameStateTest.java` iki hikâye rotasını başlangıçtan finale oynar;
 tarifleri, görev kilitlerini, ölüm durumunu ve kayıt yüklemeyi kontrol eder.
-Actions, Android 35 emülatöründe 720×1280, 1080×2400 ve 1600×2560
+Actions, Android 35 emülatöründe 720×1280, 1080×2400, 1600×2560 ve 1280×720
 boyutlarında gerçek menü tıklamaları, üretim, yemek ve uygulamayı yeniden
 açınca kayıt korumasını test eder. APK yalnızca testler geçince yüklenir.
 

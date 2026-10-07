@@ -8,12 +8,14 @@ import android.widget.*;
 import android.graphics.Bitmap;
 import java.io.FileOutputStream;
 import java.io.File;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /** Real device smoke checks, without third-party test dependencies. */
 public class SmokeTest extends Instrumentation {
     @Override public void onCreate(Bundle b){super.onCreate(b);start();}
     private View find(View v,String text){if(v instanceof Button&&text.equals(((Button)v).getText().toString()))return v;if(v instanceof ViewGroup){ViewGroup g=(ViewGroup)v;for(int i=0;i<g.getChildCount();i++){View r=find(g.getChildAt(i),text);if(r!=null)return r;}}return null;}
-    private void click(Activity a,String text){runOnMainSync(()->{View v=find(a.getWindow().getDecorView(),text);if(v==null)throw new AssertionError("Button missing: "+text);v.performClick();});waitForIdleSync();}
+    private void click(Activity a,String text){runOnMainSync(()->{View v=find(a.getWindow().getDecorView(),text);if(v==null)throw new AssertionError("Button missing: "+text);v.performClick();});waitForIdleSync();CountDownLatch frames=new CountDownLatch(1);runOnMainSync(()->a.getWindow().getDecorView().postOnAnimation(()->a.getWindow().getDecorView().postOnAnimation(frames::countDown)));try{if(!frames.await(5,TimeUnit.SECONDS))throw new AssertionError("UI frame timeout");}catch(InterruptedException e){throw new AssertionError(e);}}
     @Override public void onStart(){Bundle result=new Bundle();try{
         GameState initial=new GameState();initial.introduced=true;
         getTargetContext().getSharedPreferences("primal-story",0).edit().clear().putString("auto",initial.save()).commit();
