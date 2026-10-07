@@ -66,7 +66,7 @@ function spend(s,n){s.energy-=n;s.food=Math.max(0,s.food-2);s.water=Math.max(0,s
 function rand(s){let x=s.rng;x^=x<<13;x^=x>>>17;x^=x<<5;s.rng=x>>>0;return s.rng/4294967296}
 function wear(s,id){if(id!==11&&id!==18)return;s.durability[id]=(s.durability[id]||25)-1;if(s.durability[id]<=0){s.inventory[id]--;s.durability[id]=s.inventory[id]>0?25:0;if(!s.inventory[id])s.tool=-1;note(s,items[id]+' aşındı ve kırıldı.')}}
 function objective(s){return ['Ateş ve su kabı üret, ceviz etini ye. Sonra Mira’ya cevap ver.','Ormanda Mira’yı bul. Taş balta ve barınak üret.','Kar ya da volkan rotasını seç. Hazırlan ve üç kez araştır.','Kıyıya dön. Mercekle işaret ateşi üret ve kararını ver.','Hikâye tamamlandı. Köyünü büyütmeye devam edebilirsin.'][s.chapter]}
-function dialogue(s){const beat=registry.storyBeats[s.storyBeat];if(beat&&beat.chapter===s.chapter)return beat.speaker+': '+beat.text;return [
+function dialogue(s){const beat=registry.storyBeats&&registry.storyBeats[s.storyBeat];if(beat&&beat.chapter===s.chapter)return beat.speaker+': '+beat.text;return [
  'Akın: Önce ateşi ve su kabını hazırlayalım. Bir taşı eline alıp cevizi kır; kabuğunu sakla. Ormandaki çağrıya güçlü çıkmalısın.',
  s.metMira?'Mira: Bacağım yaralı. Kuledeki mercekle gemilere işaret verebiliriz. Beni yanında götürecek misin?':'Akın: Baltanı hazırla. Ormanda yardım isteyen birini duydum.',
  s.route<0?'Mira: Kuleye iki yol var. Kar geçidinde sıcak giysi, volkan yolunda meşale gerekecek. Hangisini seçiyorsun?':'Mira: Seçtiğin yolda üç araştırma bizi gözcü kulesine ulaştıracak.',
