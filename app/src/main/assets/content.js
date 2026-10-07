@@ -77,7 +77,8 @@ for(let output=20;output<=244;output++){
   const skill=(output-20+3)%15;
   const tier=Math.min(5,2+Math.floor((output-20)/55));
   const category=categories[1+((output-20)%7)];
-  addRecipe(`${recipeNouns[(output-20)%recipeNouns.length]} ${recipeActions[(output-20)%recipeActions.length]} ${Math.floor((output-20)/12)+1}`,
+  const actionByCategory={Yiyecek:'hazırlama',Araç:'işleme',Yapı:'kurulumu',Giysi:'dikimi',Tıp:'hazırlama',Süs:'işçiligi',Bilgi:'derlemesi',Malzeme:'işleme'};
+  addRecipe(`${items[output]} · ${actionByCategory[category]||'yapımı'}`,
     {[previous]:1,[material]:1},tool,output,skill,tier*10,category,(output-20)%4);
 }
 

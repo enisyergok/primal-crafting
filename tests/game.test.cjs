@@ -13,6 +13,17 @@ test('game model uses the full registry and can craft a deep recipe atomically',
  assert.equal(G.reduce(s,{type:'craft',recipe:12},1000).ok,true);
  assert.equal(s.inventory[r.output],1);assert.equal(s.discovered[12],true);
 });
+test('every registry recipe executes through the real reducer when supplied valid inputs',()=>{
+ assert.ok(G);
+ for(const recipe of G.recipes){
+  const s=G.newGame(1);s.chapter=4;s.region=0;s.lens=true;s.skill=100;s.rng=0;
+  s.tool=recipe.tool;if(recipe.tool>=0)s.inventory[recipe.tool]=Math.max(1,s.inventory[recipe.tool]);
+  for(const [id,amount] of Object.entries(recipe.input))s.inventory[id]+=amount;
+  const result=G.reduce(s,{type:'craft',recipe:recipe.id},1);
+  assert.equal(result.ok,true,`recipe ${recipe.id} failed: ${result.message}`);
+  assert.equal(s.inventory[recipe.output]>=1,true,`recipe ${recipe.id} produced no output`);
+ }
+});
 test('wrong tool and missing ingredients reject atomically',()=>{
  assert.ok(G);const s=G.newGame(1);const before=JSON.stringify(s);
  assert.equal(G.reduce(s,{type:'craft',recipe:0},1).ok,false);assert.equal(JSON.stringify(s),before);

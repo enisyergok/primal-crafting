@@ -14,7 +14,7 @@ function newGame(now=Date.now()){
  return {version:3,inventory,health:100,food:80,water:80,energy:100,day:1,minutes:480,
  chapter:0,region:0,trust:0,route:-1,searches:0,expeditions:0,metMira:false,ate:false,lens:false,ended:false,introduced:false,
  skill:12,skills:registry.skills.map(()=>({level:0,xp:0})),tool:-1,durability:{},rng:now>>>0||1234567,discovered:recipes.map((_,i)=>i<3),
- quests:registry.quests.map((q,i)=>({id:q.id,status:i<3?'active':'locked',progress:0})),achievements:[],prestige:0,
+  quests:registry.quests.map((q,i)=>({id:q.id,status:i<3?'active':'locked',progress:0})),events:registry.events.map(e=>({id:e.id,resolved:false})),achievements:[],prestige:0,
  helper:{energy:100,gathering:18,lumber:9,body:-1,hand:-1,bag:-1,job:null},
  buildings:{home:1,depot:1,workshop:1,farm:1,fire:1},journal:['Fırtına seni bu kıyıya getirdi. Usta Akın üretimi öğretecek; ormandan Mira’nın sesi geliyor.'],lastFarm:now};
 }
@@ -28,6 +28,7 @@ function validate(s){
  if(!s.buildings||!s.helper||!s.durability||!Array.isArray(s.discovered)||s.discovered.length!==recipes.length||!s.discovered.every(b=>typeof b==='boolean'))bad();
  if(!Array.isArray(s.skills)||s.skills.length!==registry.skills.length||!s.skills.every(x=>x&&num(x.level,0,20)&&num(x.xp,0,1000000)))bad();
  if(!Array.isArray(s.quests)||s.quests.length!==registry.quests.length||!s.quests.every(x=>x&&num(x.id,0,registry.quests.length-1)&&['locked','active','complete','failed'].includes(x.status)&&num(x.progress,0,1000000)))bad();
+ if(!Array.isArray(s.events)||s.events.length!==registry.events.length||!s.events.every(x=>x&&num(x.id,0,registry.events.length-1)&&typeof x.resolved==='boolean'))bad();
  if(!Array.isArray(s.achievements)||!s.achievements.every(x=>Number.isInteger(x)&&x>=0))bad();
  for(const key of Object.keys(buildingNames))if(!num(s.buildings[key],1,5))bad();
  for(const [key,min,max] of [['energy',0,100],['gathering',0,100],['lumber',0,100],['body',-1,19],['hand',-1,19],['bag',-1,19]])if(!num(s.helper[key],min,max))bad();
@@ -61,6 +62,40 @@ function dialogue(s){return [
  'Mira: Ufukta bir yelken! Kıyıda ateşi yak. Birlikte mi ayrılacağız?',
  s.trust>=2?'Birlikte kurtuldunuz. SON — Birlikte doğan gün.':'Gemi seni aldı; geride kalan çağrıyı unutmadın. SON — Yalnız ufuk.'
  ][s.chapter]}
+function gainSkill(s,skillId,xp){
+ const skill=s.skills[skillId];if(!skill)return;
+ skill.xp+=Math.max(0,xp);
+ while(skill.level<20&&skill.xp>=100+skill.level*20){skill.xp-=100+skill.level*20;skill.level++}
+ if(skillId===0)s.skill=Math.max(s.skill,skill.level*5);
+}
+function skillCheck(s,skillId,difficulty){
+ if(!Number.isInteger(skillId)||skillId<0||skillId>=s.skills.length)throw Error('Beceri yok.');
+ const skill=s.skills[skillId],chance=Math.max(5,Math.min(100,80+skill.level*10-difficulty));
+ const roll=((s.rng>>>0)%1000)/1000;s.rng=(Math.imul(s.rng>>>0,1664525)+1013904223)>>>0;
+ const success=roll<chance/100;if(success)gainSkill(s,skillId,5+Math.floor(difficulty/5));
+ return {chance,roll,success};
+}
+function questStatus(s,questId){
+ const q=s.quests[questId];if(!q||!registry.quests[questId])return 'locked';
+ const definition=registry.quests[questId];
+ if(q.status==='complete'||q.status==='failed')return q.status;
+ if(definition.prerequisites.some(id=>s.quests[id]?.status!=='complete'))return 'locked';
+ return q.status==='active'?'active':'locked';
+}
+function applyEvent(s,eventId,choice,now=Date.now()){
+ const definition=registry.events[eventId],saved=s.events[eventId];
+ if(!definition||!saved)return {ok:false,message:'Olay yok.'};
+ if(saved.resolved)return {ok:false,message:'Bu olay zaten çözüldü.'};
+ const selected=definition.choices[choice];if(!selected)return {ok:false,message:'Seçim yok.'};
+ const delta=selected.delta||{};
+ if(delta.item!==undefined&&(!Number.isInteger(delta.item)||delta.item<0||delta.item>=items.length))return {ok:false,message:'Olay ödülü bozuk.'};
+ if(delta.item!==undefined&&!s.inventory[delta.item]&&used(s)>=capacity(s))return {ok:false,message:'Depo dolu; ödül korunuyor.'};
+ if(s.energy+Number(delta.energy||0)<0)return {ok:false,message:'Bu seçim için enerjin yetmiyor.'};
+ s.energy=Math.max(0,Math.min(100,s.energy+Number(delta.energy||0)));s.trust=Math.max(-10,Math.min(10,s.trust+Number(delta.trust||0)));
+ if(delta.item!==undefined)s.inventory[delta.item]+=Number(delta.amount||1);
+ if(delta.xp)gainSkill(s,Number(delta.skill||definition.skill),delta.xp);
+ saved.resolved=true;note(s,definition.name+' · '+selected.text);return {ok:true,message:selected.text};
+}
 function costs(s,b){const n=s.buildings[b];return {17:20*n,6:2*n,0:3*n}}
 function reduce(s,a,now=Date.now()){
  const no=message=>({ok:false,message});const yes=message=>({ok:true,message});
@@ -144,8 +179,9 @@ function reduce(s,a,now=Date.now()){
   else if(s.chapter===3){if(s.region!==0||!s.inventory[16])return no('Kıyıda işaret ateşi gerekli.');s.trust+=c===0?1:-2;s.chapter=4;s.ended=true;}
   else return no('Hikâye tamamlandı.');note(s,dialogue(s));return yes(objective(s));
  }
+ if(a.type==='event')return applyEvent(s,a.event,a.choice,now);
  return no('Bilinmeyen işlem.');
 }
-const api={items,recipes,regions,buildingNames,skills:registry.skills,quests:registry.quests,events:registry.events,newGame,validate,migrate,findRecipe,reduce,chance,capacity,used,objective,dialogue,costs};
+const api={items,recipes,regions,buildingNames,skills:registry.skills,quests:registry.quests,events:registry.events,newGame,validate,migrate,findRecipe,reduce,chance,capacity,used,objective,dialogue,costs,skillCheck,questStatus,applyEvent};
 if(typeof module!=='undefined')module.exports=api;else root.Primal=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
