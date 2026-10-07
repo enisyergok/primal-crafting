@@ -1,41 +1,34 @@
 (function(root){
 'use strict';
-const items=['Taş','Dal','Hindistan cevizi','Yaprak','Lif','Keskin taş','İp','Ateş','Su kabı','Ceviz eti','Kabuk','Taş balta','Barınak','Meşale','Sıcak giysi','İşaret merceği','İşaret ateşi','Odun','Taş mızrak','Örgü çanta'];
+const registry=typeof module!=='undefined'&&module.exports?require('./content.js'):root.PrimalContent;
+const items=registry.items.map(item=>item.name);
 // Tool is separate from ingredients. No input item is consumed before all guards pass.
-const recipes=[
- {name:'Cevizi kır',input:{2:1},tool:0,out:9,extra:10,level:0,category:'Yemek',hint:'Sert kabuğu bir taşla kır.'},
- {name:'Keskin taş',input:{0:2},tool:-1,out:5,level:0,category:'Araç',hint:'Taştan daha keskin bir parça.'},
- {name:'İp',input:{4:3},tool:-1,out:6,level:0,category:'Araç',hint:'Üç lif demetini birbirine ör.'},
- {name:'Ateş',input:{1:3,0:2},tool:-1,out:7,level:0,category:'Yapı',hint:'Geceyi aydınlatan ilk kıvılcım.'},
- {name:'Su kabı',input:{10:1},tool:-1,out:8,level:0,category:'Yemek',hint:'Boş kabuğu yeniden kullan.'},
- {name:'Taş balta',input:{5:1,1:2,6:1},tool:-1,out:11,level:17,category:'Araç',hint:'Ormanı kesmek için temel alet.'},
- {name:'Barınak',input:{1:6,3:4,6:2},tool:-1,out:12,level:15,category:'Yapı',hint:'Yaprak ve dallarla güvenli bir sığınak.'},
- {name:'Meşale',input:{1:2,4:1},tool:7,out:13,level:12,category:'Araç',hint:'Karanlık yollarda ışık taşır.'},
- {name:'Sıcak giysi',input:{4:6,3:4,6:2},tool:-1,out:14,level:15,category:'Araç',hint:'Soğuk geçit için lifleri sıkıca ör.'},
- {name:'İşaret ateşi',input:{1:5,6:2},tool:7,out:16,level:12,category:'Yapı',hint:'Kıyıdaki mercekle gemilere haber ver.'},
- {name:'Taş mızrak',input:{5:1,1:3,6:1},tool:-1,out:18,level:20,category:'Araç',hint:'Uzun dal, keskin uç ve sağlam bağ.'},
- {name:'Örgü çanta',input:{4:6,6:2},tool:-1,out:19,level:18,category:'Araç',hint:'Yardımcının taşıma kapasitesini artır.'}
-];
-const regions=['Tropik Ada','Orman','Kar Geçidi','Volkan Yolu'];
+const recipes=registry.recipes.map(recipe=>({...recipe,out:recipe.output,hint:recipe.hint||`${recipe.name} için doğru malzemeleri ve aleti birleştir.`}));
+const regions=registry.regionNames;
 const buildingNames={home:'Ev',depot:'Depo',workshop:'Atölye',farm:'Tarla',fire:'Ateş Alanı'};
 const capacity=s=>16+s.buildings.depot*8;
 const used=s=>s.inventory.filter(n=>n>0).length;
 const chance=(s,r)=>Math.max(25,Math.min(100,100+(s.skill-r.level)*5));
 function newGame(now=Date.now()){
- return {version:2,inventory:[3,5,2,8,6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],health:100,food:80,water:80,energy:100,day:1,minutes:480,
+ const inventory=Array(items.length).fill(0);inventory[0]=3;inventory[1]=5;inventory[2]=2;inventory[3]=8;inventory[4]=6;inventory[15]=1;inventory[17]=0;
+ return {version:3,inventory,health:100,food:80,water:80,energy:100,day:1,minutes:480,
  chapter:0,region:0,trust:0,route:-1,searches:0,expeditions:0,metMira:false,ate:false,lens:false,ended:false,introduced:false,
- skill:12,tool:-1,durability:{},rng:now>>>0||1234567,discovered:recipes.map((_,i)=>i<3),
+ skill:12,skills:registry.skills.map(()=>({level:0,xp:0})),tool:-1,durability:{},rng:now>>>0||1234567,discovered:recipes.map((_,i)=>i<3),
+ quests:registry.quests.map((q,i)=>({id:q.id,status:i<3?'active':'locked',progress:0})),achievements:[],prestige:0,
  helper:{energy:100,gathering:18,lumber:9,body:-1,hand:-1,bag:-1,job:null},
  buildings:{home:1,depot:1,workshop:1,farm:1,fire:1},journal:['Fırtına seni bu kıyıya getirdi. Usta Akın üretimi öğretecek; ormandan Mira’nın sesi geliyor.'],lastFarm:now};
 }
 function validate(s){
  const bad=()=>{throw Error('Kayıt bozuk; özgün kayıt korunuyor.')};
- if(!s||s.version!==2||!Array.isArray(s.inventory)||s.inventory.length!==items.length)bad();
+ if(!s||s.version!==3||!Array.isArray(s.inventory)||s.inventory.length!==items.length)bad();
  const num=(n,min,max)=>Number.isFinite(n)&&Number.isInteger(n)&&n>=min&&n<=max;
  if(!s.inventory.every(n=>num(n,0,1000000)))bad();
  for(const key of ['health','food','water','energy'])if(!num(s[key],0,100))bad();
  for(const [key,min,max] of [['day',1,1000000],['minutes',0,1439],['chapter',0,4],['region',0,3],['route',-1,3],['skill',0,100],['tool',-1,19],['searches',0,1000000],['expeditions',0,3],['trust',-10,10],['rng',0,4294967295]])if(!num(s[key],min,max))bad();
  if(!s.buildings||!s.helper||!s.durability||!Array.isArray(s.discovered)||s.discovered.length!==recipes.length||!s.discovered.every(b=>typeof b==='boolean'))bad();
+ if(!Array.isArray(s.skills)||s.skills.length!==registry.skills.length||!s.skills.every(x=>x&&num(x.level,0,20)&&num(x.xp,0,1000000)))bad();
+ if(!Array.isArray(s.quests)||s.quests.length!==registry.quests.length||!s.quests.every(x=>x&&num(x.id,0,registry.quests.length-1)&&['locked','active','complete','failed'].includes(x.status)&&num(x.progress,0,1000000)))bad();
+ if(!Array.isArray(s.achievements)||!s.achievements.every(x=>Number.isInteger(x)&&x>=0))bad();
  for(const key of Object.keys(buildingNames))if(!num(s.buildings[key],1,5))bad();
  for(const [key,min,max] of [['energy',0,100],['gathering',0,100],['lumber',0,100],['body',-1,19],['hand',-1,19],['bag',-1,19]])if(!num(s.helper[key],min,max))bad();
  for(const key of Object.keys(s.durability))if(!num(s.durability[key],0,1000))bad();
@@ -153,6 +146,6 @@ function reduce(s,a,now=Date.now()){
  }
  return no('Bilinmeyen işlem.');
 }
-const api={items,recipes,regions,buildingNames,newGame,validate,migrate,findRecipe,reduce,chance,capacity,used,objective,dialogue,costs};
+const api={items,recipes,regions,buildingNames,skills:registry.skills,quests:registry.quests,events:registry.events,newGame,validate,migrate,findRecipe,reduce,chance,capacity,used,objective,dialogue,costs};
 if(typeof module!=='undefined')module.exports=api;else root.Primal=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

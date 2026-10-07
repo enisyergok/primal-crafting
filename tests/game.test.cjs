@@ -7,6 +7,12 @@ test('craft consumes coconut but retains the equipped stone and saves discovery'
  assert.equal(s.inventory[2],1);assert.equal(s.inventory[0],3);assert.equal(s.inventory[9],1);
  assert.equal(G.validate(JSON.parse(JSON.stringify(s))).discovered[0],true);
 });
+test('game model uses the full registry and can craft a deep recipe atomically',()=>{
+ assert.ok(G);assert.equal(G.items.length,343);assert.equal(G.recipes.length,237);
+ const s=G.newGame(1000);const r=G.recipes[12];s.tool=r.tool;s.skill=100;s.inventory[5]=2;s.inventory[245]=2;
+ assert.equal(G.reduce(s,{type:'craft',recipe:12},1000).ok,true);
+ assert.equal(s.inventory[r.output],1);assert.equal(s.discovered[12],true);
+});
 test('wrong tool and missing ingredients reject atomically',()=>{
  assert.ok(G);const s=G.newGame(1);const before=JSON.stringify(s);
  assert.equal(G.reduce(s,{type:'craft',recipe:0},1).ok,false);assert.equal(JSON.stringify(s),before);
