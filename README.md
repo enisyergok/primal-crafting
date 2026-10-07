@@ -3,6 +3,14 @@
 Android için dokunmatik bir hayatta kalma ve crafting prototipi. Oyuncu her gün
 jungleden odun, taş ve lif toplar; ateş ve barınak kurarak ilk geceyi atlatır.
 
+## Referans tasarım ekranları
+
+Ekli PRIMAL konsept görseli görsel atlas olarak uygulamaya dahil edilmiştir.
+Atlasın 9 paneli gerçek ekranlara ayrılır: envanter, crafting, kullanım,
+teknoloji ağacı, harita, karakter durumu, tropik ada, orman ve kar bölgesi.
+Her panel dokunmatik olarak ilgili ekrana geçer; böylece referanstaki görünüm
+ve menü düzeni korunurken prototip içinde gezilebilir.
+
 ## Oynanış döngüsü
 
 - **Gather:** Her dokunuş enerji harcayıp sırayla odun, taş veya lif toplar.
