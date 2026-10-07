@@ -3,8 +3,37 @@
 const P=globalThis.Primal;let state=load();let page='camp';let selectedRecipe=0;let selectedTool=-1;let selectedResource=0;let selectedBuilding='depot';let materialSelection=[];let notice='';let dragId=null;let pointerDrag=null;let suppressClickUntil=0;
 let audioContext=null;
 const $=s=>document.querySelector(s), esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const glyphs=['◆','◈','●','✦','✧','⬟','⬢','✹','◉','✚','◌','⚒','⌂','☼','◇','✺','✹','▰','➶','▤'];
-const icon=(id,cls='')=>id<24?`<span class="sprite ${cls}" style="background-position:${(id%6)*20}% ${Math.floor(id/6)*33.333}%" aria-hidden="true"></span>`:`<span class="item-glyph ${cls}" aria-hidden="true">${glyphs[id%glyphs.length]}</span>`;
+const artInk='#5a351a';
+function itemArt(id){
+ const item=P.itemData?.[id]||{};const name=(item.name||P.items[id]||'').toLocaleLowerCase('tr-TR');const category=item.category||'Malzeme';const hue=(id*37)%360;const fill=`hsl(${hue} 42% 62%)`;
+ const wrap=body=>`<svg viewBox="0 0 80 80" role="img" aria-label="${esc(P.items[id])}" xmlns="http://www.w3.org/2000/svg"><g stroke="${artInk}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${body}</g></svg>`;
+ if(category==='Yiyecek'||item.tags?.includes('food')){
+  if(/balık|fish|yengeç|karides|midye/.test(name))return wrap(`<path fill="${fill}" d="M12 42c12-16 35-16 48 0-13 16-36 16-48 0Z"/><path fill="${fill}" d="m60 42 13-11v22L60 42Z"/><circle fill="#fff1bd" cx="27" cy="37" r="3"/>`);
+  if(/mantar|mushroom/.test(name))return wrap(`<path fill="#c66a4b" d="M12 39c2-17 23-24 36-14 5 4 8 9 8 14H12Z"/><path fill="#e7bc82" d="M30 39h12v25H30z"/><path fill="#fff1bd" d="M20 31h5m13-5h5m5 10h4"/>`);
+  if(/çorba|içecek|çay|kahve|öz|iksir|karışım/.test(name))return wrap(`<path fill="#b97642" d="M20 33h40l-4 30H24l-4-30Z"/><path fill="#dba45e" d="M17 30h46c0 7-8 10-23 10S17 37 17 30Z"/><path d="M30 21c-4-7 5-8 1-15m12 15c-4-7 5-8 1-15" fill="none"/>`);
+  return wrap(`<path fill="${fill}" d="M20 48c-8-17 9-31 22-22 2-8 17-5 18 8 12 4 7 20-5 21-11 8-29 4-35-7Z"/><path fill="#5b8b3c" d="m39 28 5-12 9 5-7 9"/>`);
+ }
+ if(category==='Araç'||item.tags?.includes('tool')){
+  if(/balta|axe/.test(name))return wrap(`<path d="M22 64 52 17" stroke-width="6"/><path fill="#9f6040" d="M47 27c9-15 19-12 20-5-8 8-15 10-20 5Z"/>`);
+  if(/bıçak|keski|kazma|çekiç|maşa/.test(name))return wrap(`<path d="M19 62 49 32" stroke-width="6"/><path fill="#aeb7b2" d="m43 27 24-8-14 20-12-2Z"/>`);
+  if(/mızrak|spear|iğne|bız|kanca|olta/.test(name))return wrap(`<path d="M19 66 59 19" stroke-width="4"/><path fill="#aeb7b2" d="m57 19 12-7-6 13Z"/><path fill="#b97642" d="m16 65 8-2-5 8Z"/>`);
+  if(/sepet|çanta|basket|bag|kase|testi|kap/.test(name))return wrap(`<path fill="#a96d32" d="M17 31h46l-5 32H22l-5-32Z"/><path d="M25 31c0-20 30-20 30 0M22 42h36M25 52h30" fill="none"/>`);
+  return wrap(`<path fill="#b97642" d="M20 57 47 30l12 12-27 27Z"/><path fill="#b9c4c0" d="m43 26 13-10 11 11-10 13Z"/>`);
+ }
+ if(category==='Giysi')return wrap(`<path fill="${fill}" d="m27 18 13 8 13-8 12 13-9 9v27H24V40l-9-9 12-13Z"/><path d="M40 26v41M24 42h32" fill="none"/>`);
+ if(category==='Yapı'){
+  if(/kule|kapı|kulübe|sığınak|alanı/.test(name))return wrap(`<path fill="#b9783d" d="M17 65V35l23-20 23 20v30Z"/><path fill="#8a4f2a" d="m12 37 28-25 28 25-6 6-22-19-22 19Z"/><path fill="#efd18d" d="M34 65V48h12v17Z"/>`);
+  return wrap(`<path fill="#a86a31" d="M16 36h48v31H16z"/><path fill="#8d4b26" d="m10 37 30-25 30 25-6 7-24-20-24 20Z"/><path fill="#efd18d" d="M34 67V50h12v17Z"/>`);
+ }
+ if(category==='Tıp')return wrap(`<path fill="#e7d1a1" d="M29 24h22v40H29z"/><path fill="#b85c4b" d="M34 17h12v12H34z"/><path d="M35 43h10M40 38v10" stroke="#fff1bd" stroke-width="4"/>`);
+ if(category==='Bilgi')return wrap(`<path fill="#d6a760" d="M19 18h38v48H19z"/><path fill="#f7e5ad" d="M25 25h26v4H25zm0 10h20v4H25zm0 10h25v4H25z"/>`);
+ if(category==='Süs')return wrap(`<circle fill="${fill}" cx="40" cy="35" r="18"/><path fill="#e9c86e" d="m40 17 5 13 14 5-14 5-5 13-5-13-14-5 14-5Z"/>`);
+ if(item.tags?.includes('fiber')||/lif|kamış|sarmaşık|ot|kök|yosun/.test(name))return wrap(`<path d="M18 62c15-17 30-24 45-44M21 64c12-12 25-15 38-18M28 67c11-8 21-8 31-7" fill="none" stroke="#98703f" stroke-width="5"/><path d="M27 48 18 39m17 2-6-12m17 3-1-13" fill="none" stroke="#6b8b43" stroke-width="5"/>`);
+ if(item.tags?.includes('wood')||/dal|odun|bambu|tahta|ağaç/.test(name))return wrap(`<path d="M18 61 61 19" stroke="#8c542e" stroke-width="8"/><path d="m37 42 4-19m8 11 15-9" fill="none" stroke="#8c542e" stroke-width="6"/><path d="M23 59 58 24" stroke="#d29a55"/>`);
+ if(item.tags?.includes('container')||/kabuk|deniz|mercan|kil/.test(name))return wrap(`<path fill="#b97b48" d="M17 34c4 22 42 22 46 0-7 8-39 8-46 0Z"/><path fill="#efd09a" d="M17 34c3-12 43-12 46 0-9 8-37 8-46 0Z"/>`);
+ return wrap(`<path fill="${fill}" d="m14 47 12-28 32-6 10 27-20 22-28-4Z"/><path d="m28 25 16 12 14-18" fill="none" stroke="#e8d2a0"/>`);
+}
+const icon=(id,cls='')=>id<24?`<span class="sprite ${cls}" style="background-position:${(id%6)*20}% ${Math.floor(id/6)*33.333}%" aria-hidden="true"></span>`:`<span class="item-art ${cls}" aria-hidden="true">${itemArt(id)}</span>`;
 const button=(label,attrs='',cls='secondary')=>`<button class="${cls}" ${attrs}>${label}</button>`;
 function load(){
   try {
@@ -55,8 +84,8 @@ function gatheringPanel(){
  return `<section class="panel gathering-panel"><div class="row"><div class="grow"><h2>Kaynak toplama</h2><p class="muted">${esc(P.regions[state.region])} · Dokunarak kaynak topla. Aleti ele takınca özel kaynaklar açılır.</p></div>${button(axe?'Odun kes':'Topla',axe?'data-gather-kind="wood"':'data-gather="1"','wood')}</div><div class="gather-grid">${shown.map(id=>button(`${icon(id,'mini')} ${esc(P.items[id])}`,`data-gather-resource="${id}"`,'secondary')).join('')}</div>${extra.length?`<details><summary>Diğer kaynaklar · ${extra.length}</summary><div class="gather-grid">${extra.map(id=>button(`${icon(id,'mini')} ${esc(P.items[id])}`,`data-gather-resource="${id}"`,'secondary')).join('')}</div></details>`:''}</section>`;
 }
 function camp(){
- const ids=state.inventory.map((n,i)=>n?i:-1).filter(i=>i>=0);return `<h1>Kamp ve envanter</h1>${tabs('all')}<div class="inventory">${ids.map(id=>itemCard(id)).join('')}</div>${gatheringPanel()}
- <section class="panel"><h2>Üretim masası</h2><div class="workbench"><div><h3>Malzeme</h3><div id="material-drop" class="dropzone" data-drop="material">${materialSelection.length?materialSelection.map(id=>`<span class="chip">${icon(id,'mini')}<b>${esc(P.items[id])}</b></span>`).join(''):'<span class="hint">Malzemeleri buraya sürükle</span>'}${materialSelection.length?button('Temizle','data-clear-material="1"','secondary'):''}</div></div><div><h3>Alet</h3><select id="tool-select" class="tool-select"><option value="-1">El ile</option>${[0,5,7,11,18].filter(i=>state.inventory[i]).map(i=>`<option value="${i}" ${selectedTool===i?'selected':''}>${esc(P.items[i])}</option>`).join('')}</select></div></div>${button('✦ Üret','id="craft-now"','wood primary')}<div class="task">⚑ ${esc(P.objective(state))}</div></section>
+ const ids=state.inventory.map((n,i)=>n?i:-1).filter(i=>i>=0);return `<h1>Kamp ve envanter</h1>${tabs('all')}<div class="inventory">${ids.map(id=>itemCard(id)).join('')}</div>
+ <section class="panel"><h2>Üretim masası</h2><div class="workbench"><div><h3>Malzeme</h3><div id="material-drop" class="dropzone" data-drop="material">${materialSelection.length?materialSelection.map(id=>`<span class="chip">${icon(id,'mini')}<b>${esc(P.items[id])}</b></span>`).join(''):'<span class="hint">Malzemeleri buraya sürükle</span>'}${materialSelection.length?button('Temizle','data-clear-material="1"','secondary'):''}</div></div><div><h3>Alet</h3><select id="tool-select" class="tool-select"><option value="-1">El ile</option>${[0,5,7,11,18].filter(i=>state.inventory[i]).map(i=>`<option value="${i}" ${selectedTool===i?'selected':''}>${esc(P.items[i])}</option>`).join('')}</select></div></div>${button('✦ Üret','id="craft-now"','wood primary')}<div class="task">⚑ ${esc(P.objective(state))}</div></section>${gatheringPanel()}
  <div class="actions">${button('🍖 Ye','id="eat"')}${button('💧 Su iç','id="drink"')}${button('☼ Dinlen','id="rest"')}${button('⌁ Keşif','id="explore"')}</div>`
 }
 function itemCard(id){const r=P.recipes.findIndex(x=>x.out===id);return `<button class="item" draggable="true" data-item="${id}" aria-label="${esc(P.items[id])}, adet ${state.inventory[id]}">${icon(id)}<span class="name">${esc(P.items[id])}</span><b class="count">${state.inventory[id]}</b>${r>=0&&state.discovered[r]?'<small class="badge">tarif</small>':''}</button>`}
