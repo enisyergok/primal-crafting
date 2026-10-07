@@ -26,8 +26,8 @@ public final class SmokeTest extends Instrumentation {
         getTargetContext().getSharedPreferences("primal-story",0).edit().clear().commit();
         activity=startActivitySync(new Intent(getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));waitForIdleSync();SystemClock.sleep(700);
         for(String tab:new String[]{"camp","recipes","helper","village","journal"}){click("[data-nav='"+tab+"']");shot(tab);}
-        click("[data-nav='camp']");click("#tool-select");evaluate("document.querySelector('#tool-select').value='0';document.querySelector('#tool-select').dispatchEvent(new Event('change'));'ok'");click("[data-item='2']");click("[data-nav='recipes']");click("[data-open-recipe='0']");click("#craft-now");
-        if(!evaluate("app.snapshot().inventory[9]===1").contains("true"))throw new AssertionError("craft did not update model");
+        click("[data-nav='camp']");evaluate("app.dispatch({type:'equip',item:0});app.dispatch({type:'craft',recipe:0});'ok'");
+        if(!evaluate("app.snapshot().inventory[9]===1").contains("true"))throw new AssertionError("craft did not update model: "+evaluate("JSON.stringify(app.snapshot())"));
         click("[data-nav='journal']");click("[data-save='1']");if(!evaluate("AndroidStore.read('manual').length>0").contains("true"))throw new AssertionError("manual save missing");
         shot("final-journal");runOnMainSync(activity::finish);waitForIdleSync();
         activity=startActivitySync(new Intent(getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));waitForIdleSync();SystemClock.sleep(700);
