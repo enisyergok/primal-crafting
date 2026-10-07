@@ -28,14 +28,22 @@ public final class SmokeTest extends Instrumentation {
         if(expectedPage!=null){
             boolean reached=false;
             for(int i=0;i<20;i++){
-                if(evaluate("document.querySelector('main').getAttribute('data-page')").contains(expectedPage)){reached=true;break;}
+                String rendered=evaluate("document.querySelector('main').innerText");
+                if(evaluate("document.querySelector('main').getAttribute('data-page')").contains(expectedPage)&&rendered.contains(marker(expectedPage))){reached=true;break;}
                 SystemClock.sleep(100);
             }
             if(!reached)throw new AssertionError("page did not reach "+expectedPage);
         }
-        SystemClock.sleep(350);
+        SystemClock.sleep(700);
     }
     private String quote(String value){return "'"+value.replace("\\", "\\\\").replace("'", "\\'")+"'";}
+    private String marker(String page){
+        if("camp".equals(page))return "Kamp ve envanter";
+        if("recipes".equals(page))return "Tarif defteri";
+        if("helper".equals(page))return "Yardımcı · Kaya";
+        if("village".equals(page))return "Köy · Seviye";
+        return "Ustalığa ilk adım";
+    }
     private void shot(String name){Bitmap b=getUiAutomation().takeScreenshot();if(b!=null){try(FileOutputStream o=new FileOutputStream(new File(getTargetContext().getExternalFilesDir(null),name+".png"))){b.compress(Bitmap.CompressFormat.PNG,100,o);}catch(IOException e){throw new AssertionError(e);}b.recycle();}}
     @Override public void onCreate(Bundle b){super.onCreate(b);start();}
     @Override public void onStart(){Bundle out=new Bundle();try{
