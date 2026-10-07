@@ -7,6 +7,7 @@ test('PRIMAL registry contains the full depth target',()=>{
   assert.equal(C.recipes.length,237);
   assert.equal(C.quests.length,87);
   assert.equal(C.skills.length,15);
+  assert.equal(C.items.some(item=>/^(İnce|Sağlam|Oyma|Kurutulmuş|Parlak|Örgü|Keskin|Sıcak|Soğuk|Közlenmiş|Büyük|Usta) (malzeme|yiyecek|araç|giysi|yapı|tıp|süs|bilgi) \d+$/i.test(item.name)),false,'generated items must have real names');
 });
 
 test('every recipe has valid references and a distinct output',()=>{

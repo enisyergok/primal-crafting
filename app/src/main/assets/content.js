@@ -41,11 +41,21 @@ for(const [names,category,region,tier,gatherable,tag] of pools){
   }
 }
 const modifiers=['İnce','Sağlam','Oyma','Kurutulmuş','Parlak','Örgü','Keskin','Sıcak','Soğuk','Közlenmiş','Büyük','Usta'];
-let modIndex=0;
+const fillerNames={
+  Malzeme:['Kuvars parçası','Kuru kozalak','Kızıl taş','Parlak cevher','Yontulmuş kabuk','Sert kemik','Deniz taşı','Kırmızı toprak','Cam çakıl','Kül topağı'],
+  Yiyecek:['Orman yemişi','Tropik şurup','Kavrulmuş tohum','Tuzlu balık','Kök lokması','Bal özü','Kurutulmuş mantar','Dağ meyvesi'],
+  Araç:['Yontma bıçak','Lif iğnesi','Kemik kanca','Taş tokmak','Bambu boru','Kabuk kepçe','Örgü ağ','Kömür maşası'],
+  Giysi:['Lif başlık','Kürk pelerin','Kabuk dizlik','Bambu sandalet','Örgü eldiven','Dağ çizmesi','Su geçirmez başlık'],
+  Yapı:['Kamp rafı','Taş fırın','Bambu kulübe','Kurutma askısı','Depo rafı','Gözlem direği','Takas tezgâhı'],
+  Tıp:['Yaprak lapası','Kök şurubu','Reçine kremi','Kül pansumanı','Mantar özü','Şifa demeti','Soğuk merhem'],
+  Süs:['Oyma boncuk','Tüy kolye','Kabuk düğme','Kaya mührü','Renkli bileklik','Kaptan rozeti'],
+  Bilgi:['Kule haritası','Oyma tablet','Gözcü notu','Kıyı işareti','Mira güncesi','Akın planı']
+};
+let modIndex=0;const fillerIndex=Object.fromEntries(categories.map(category=>[category,0]));
 while(items.length<343){
   const category=categories[items.length%categories.length];
   const region=items.length%4,tier=Math.min(5,1+Math.floor(items.length/70));
-  const name=`${modifiers[modIndex++%modifiers.length]} ${category.toLocaleLowerCase('tr-TR')} ${String(items.length).padStart(3,'0')}`;
+  const index=fillerIndex[category]++,base=fillerNames[category][index%fillerNames[category].length],cycle=Math.floor(index/fillerNames[category].length);const name=`${modifiers[modIndex++%modifiers.length]} ${base}${cycle?` ${cycle+1}`:''}`;
   addItem(name,category,region,tier,category==='Malzeme'||category==='Yiyecek',[category.toLowerCase()]);
 }
 // Late-region discoveries are gathered roots for the deep recipe graph even
