@@ -19,7 +19,7 @@ public final class SmokeTest extends Instrumentation {
         return result[0];
     }
     private WebView findWebView(android.view.View v){if(v instanceof WebView)return (WebView)v;if(v instanceof android.view.ViewGroup){android.view.ViewGroup g=(android.view.ViewGroup)v;for(int i=0;i<g.getChildCount();i++){WebView w=findWebView(g.getChildAt(i));if(w!=null)return w;}}return null;}
-    private void click(String selector){evaluate("document.querySelector('"+selector+"').click();'ok'");waitForIdleSync();}
+    private void click(String selector){evaluate("document.querySelector('"+selector+"').click();'ok'");waitForIdleSync();SystemClock.sleep(180);}
     private void shot(String name){Bitmap b=getUiAutomation().takeScreenshot();if(b!=null){try(FileOutputStream o=new FileOutputStream(new File(getTargetContext().getExternalFilesDir(null),name+".png"))){b.compress(Bitmap.CompressFormat.PNG,100,o);}catch(IOException e){throw new AssertionError(e);}b.recycle();}}
     @Override public void onCreate(Bundle b){super.onCreate(b);start();}
     @Override public void onStart(){Bundle out=new Bundle();try{
