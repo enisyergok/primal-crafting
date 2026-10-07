@@ -6,7 +6,9 @@ const icon=(id,cls='')=>`<span class="sprite ${cls}" style="background-position:
 const button=(label,attrs='',cls='secondary')=>`<button class="${cls}" ${attrs}>${label}</button>`;
 function load(){try{const raw=globalThis.AndroidStore?AndroidStore.read('auto'):localStorage.getItem('primal-auto');if(!raw)return P.newGame(Date.now());try{return P.validate(JSON.parse(raw))}catch(jsonError){if(raw.includes('version=1')){const old={inventory:[],journal:[]};raw.split(/\r?\n/).forEach(line=>{const m=line.match(/^v(\d+)=(.*)$/);if(m)old[['chapter','region','health','food','water','energy','minutes','day','trust','route','searches'][+m[1]]=+m[2]);const i=line.match(/^i(\d+)=(.*)$/);if(i)old.inventory[+i[1]]=+i[2]});const migrated=P.migrate(old);notice='Eski kayıt yeni sisteme aktarıldı.';return migrated}throw jsonError}}catch(e){notice=e.message;return P.newGame(Date.now())}}
 function save(slot='auto'){const raw=JSON.stringify(state);try{if(globalThis.AndroidStore)AndroidStore.write(slot,raw);else localStorage.setItem('primal-'+slot,raw)}catch(e){notice='Kayıt yazılamadı.'}}
-function snapshot(){return JSON.parse(JSON.stringify(state))}globalThis.app={snapshot,dispatch};
+function snapshot(){return JSON.parse(JSON.stringify(state))}
+function dispatch(action){return act(action)}
+globalThis.app={snapshot,dispatch};
 function act(action){const result=P.reduce(state,action,Date.now());notice=result.message;if(result.ok){save();render()}else toast(notice);return result}
 function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('show'),2600)}
 function stat(symbol,label,value,cls=''){return `<div class="stat"><span class="symbol ${cls}">${symbol}</span><b>${label}</b><small>${value}</small></div>`}
