@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const P=globalThis.Primal;let state=load();let page='camp';let selectedRecipe=0;let selectedTool=-1;let selectedResource=0;let selectedBuilding='depot';let materialSelection=[];let notice='';let dragId=null;
+const P=globalThis.Primal;let state=load();let page='camp';let selectedRecipe=0;let selectedTool=-1;let selectedResource=0;let selectedBuilding='depot';let materialSelection=[];let notice='';let dragId=null;let pointerDrag=null;let suppressClickUntil=0;
 let audioContext=null;
 const $=s=>document.querySelector(s), esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const glyphs=['◆','◈','●','✦','✧','⬟','⬢','✹','◉','✚','◌','⚒','⌂','☼','◇','✺','✹','▰','➶','▤'];
@@ -68,11 +68,48 @@ function eventPanel(){const e=P.events.find(x=>state.events[x.id]&&state.events[
 function skillPanel(){const techs=P.technologies||[];return `<section class="panel"><h2>15 beceri</h2><div class="recipe-parts">${P.skills.map((s,i)=>`<span>${esc(s.name)} ${state.skills[i].level}.${state.skills[i].xp}/${s.xpPerLevel}</span>`).join('')}</div><h3 class="subheading">Teknoloji ağacı</h3>${techs.map((t,i)=>`<div class="countline"><span>${state.technologies?.[i]?'✓':'○'} ${esc(t.name)}<small> · ${esc(t.description)}</small></span>${state.technologies?.[i]?'':button('Aç',`data-technology="${i}"`,'secondary')}</div>`).join('')}</section>`}
 function questPanel(){return `<section class="panel"><h2>Görev günlüğü · ${state.quests.filter(q=>q.status==='complete').length}/87</h2>${state.quests.map(q=>{const d=P.quests[q.id],status=P.questStatus(state,q.id),target=d.type==='craft'?P.items[d.target]:d.type==='explore'?P.regions[d.target]:d.type==='build'?P.buildingNames[d.target]:d.type==='event'?(P.events[d.target]?.name||'olay'):P.items[d.target];return `<div class="countline"><span>${esc(d.name)}<small> · ${d.type} / ${esc(target)} · ${q.progress}/${d.amount}</small></span><b class="${status==='complete'?'good':''}">${status}</b></div>`}).join('')}</section>`}
 function journal(){const st=P.statistics(state);return `<h1>Ustalığa ilk adım</h1><section class="panel dialogue"><div class="row"><div class="portrait" style="background-position:100% 0"></div><p><b>Akın:</b><br/>${esc(P.dialogue(state))}</p></div>${state.chapter<4?`<div class="actions">${button('Nasıl yapacağım?','data-choice="0"','secondary')}${button('Hazırım.','data-choice="1"','secondary')}</div>`:''}</section>${eventPanel()}${questPanel()}${skillPanel()}<section class="panel"><h2>İlerleme istatistikleri</h2><div class="recipe-parts"><span>Bulunan nesne: ${st.items}/343</span><span>Tarif: ${st.recipes}/237</span><span>Görev: ${st.quests}/87</span><span>Bölüm: ${st.chapter}/5</span><span>Başarım: ${st.achievements}/${P.achievements.length}</span></div></section><section class="panel"><h2>Başarımlar</h2>${P.achievements.map(a=>`<div class="countline"><span>${esc(a.name)}<small> · ${esc(a.description)}</small></span><b class="${P.achievementStatus(state,a.id)==='unlocked'?'good':''}">${P.achievementStatus(state,a.id)==='unlocked'?'✓':'·'}</b></div>`).join('')}</section><section class="panel"><h2>Hikâye kayıtları</h2>${state.journal.slice().reverse().map(x=>`<p class="journal-log">${esc(x)}</p>`).join('')}</section><section class="panel"><h2>Kayıt yuvaları</h2><p class="muted">Üç ayrı yolculuğu sakla; otomatik kayıt ayrıca korunur.</p><div class="save-row">${[1,2,3].map(i=>button(`Slot ${i} kaydet`,`data-slot-save="${i}"`,'secondary')).join('')}</div><div class="save-row">${[1,2,3].map(i=>button(`Slot ${i} yükle`,`data-slot-load="${i}"`,'secondary')).join('')}</div><div class="save-row">${button('Şimdi elle kaydet','data-save="1"','secondary')}${button('Elle kaydı yükle','data-load="1"','secondary')}</div><div class="save-row">${button('Yeni oyun','data-new="1"','secondary danger')}${state.ended?button('Yeni oyun+','data-new-plus="1"','wood'):''}</div></section>`}
+function finishPointerMaterial(id,x,y){
+  const target=document.elementFromPoint(x,y);
+  const zone=target&&target.closest?target.closest('.dropzone'):null;
+  if(pointerDrag?.ghost)pointerDrag.ghost.remove();
+  pointerDrag=null;
+  if(!zone)return false;
+  materialSelection.push(id);render();return true;
+}
 function bind(){
- document.querySelectorAll('[data-item]').forEach(el=>{el.onclick=()=>{const id=+el.dataset.item;if(id===9)act({type:'eat'});else if(id===8)act({type:'drink'});else if(P.recipes.some(r=>r.out===id)){selectedRecipe=P.recipes.findIndex(r=>r.out===id);page='recipes';render()}};el.ondragstart=e=>{dragId=+el.dataset.item;e.dataTransfer.setData('text/plain',dragId)};el.ondblclick=()=>{selectedTool=+el.dataset.item;state.tool=selectedTool;toast(P.items[selectedTool]+' ele takıldı.')}});
+ document.querySelectorAll('[data-item]').forEach(el=>{
+  const id=+el.dataset.item;
+  const isIngredient=P.recipes.some(r=>Object.prototype.hasOwnProperty.call(r.input,id));
+  el.onclick=()=>{if(Date.now()<suppressClickUntil)return;if(id===9)act({type:'eat'});else if(id===8)act({type:'drink'});else if(P.recipes.some(r=>r.out===id)){selectedRecipe=P.recipes.findIndex(r=>r.out===id);page='recipes';render()}};
+  el.ondragstart=e=>{dragId=id;e.dataTransfer.setData('text/plain',dragId)};
+  el.onpointerdown=e=>{
+   if(e.pointerType==='mouse')return;
+   pointerDrag={id,startX:e.clientX,startY:e.clientY,moved:false,ghost:null};
+   el.setPointerCapture?.(e.pointerId);e.preventDefault();
+  };
+  el.onpointermove=e=>{
+   if(!pointerDrag||pointerDrag.id!==id)return;
+   const moved=Math.hypot(e.clientX-pointerDrag.startX,e.clientY-pointerDrag.startY)>8;
+   if(moved&&!pointerDrag.moved){
+    pointerDrag.moved=true;
+    const ghost=el.cloneNode(true);ghost.className='drag-ghost';document.body.appendChild(ghost);pointerDrag.ghost=ghost;
+   }
+   if(pointerDrag.moved&&pointerDrag.ghost){pointerDrag.ghost.style.left=e.clientX+'px';pointerDrag.ghost.style.top=e.clientY+'px';e.preventDefault()}
+  };
+  el.onpointerup=e=>{
+   if(!pointerDrag||pointerDrag.id!==id)return;
+   const drag=pointerDrag;suppressClickUntil=Date.now()+500;
+   if(drag.moved)finishPointerMaterial(drag.id,e.clientX,e.clientY);
+   else if(page==='camp'&&isIngredient){pointerDrag=null;materialSelection.push(drag.id);render()}
+   else{if(drag.ghost)drag.ghost.remove();pointerDrag=null}
+   e.preventDefault();
+  };
+  el.onpointercancel=()=>{if(pointerDrag?.ghost)pointerDrag.ghost.remove();pointerDrag=null};
+  el.ondblclick=()=>{selectedTool=id;state.tool=id;toast(P.items[id]+' ele takıldı.')}
+ });
  document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.item').forEach(x=>{const id=+x.dataset.item;const r=P.recipes.find(z=>z.out===id);const f=b.dataset.filter;x.style.display=f==='all'||(f==='food'&&r?.category==='Yemek')||(f==='tool'&&r?.category==='Araç')||(f==='building'&&r?.category==='Yapı')?'':'none'})});
  document.querySelectorAll('.dropzone').forEach(z=>{z.ondragover=e=>{e.preventDefault();z.classList.add('over')};z.ondragleave=()=>z.classList.remove('over');z.ondrop=e=>{e.preventDefault();z.classList.remove('over');dragId=+e.dataTransfer.getData('text');if(Number.isInteger(dragId)&&dragId>=0&&dragId<P.items.length){materialSelection.push(dragId);render()}}});document.querySelectorAll('[data-clear-material]').forEach(b=>b.onclick=()=>{materialSelection=[];render()});
- const craft=()=>{const recipe=materialSelection.length?P.findRecipe(materialSelection,state.tool):selectedRecipe;if(recipe<0){toast('Bu malzeme birleşimi için tarif yok.');return {ok:false}}const result=act({type:'craft',recipe});if(result.ok)materialSelection=[];return result};const cb=$('#craft-now');if(cb)cb.onclick=craft;const req=$('#equip-required');if(req)req.onclick=()=>{const id=+req.dataset.requiredTool;if(state.inventory[id]){state.tool=id;selectedTool=id;render()}else toast('Gerekli alet envanterinde yok.')};const ts=$('#tool-select');if(ts)ts.onchange=()=>{selectedTool=+ts.value;state.tool=selectedTool;render()};const rs=$('#recipe-tool');if(rs)rs.onchange=()=>{state.tool=+rs.value;selectedTool=state.tool;render()};
+ const craft=()=>{const recipe=materialSelection.length?P.findRecipe(materialSelection,state.tool):selectedRecipe;if(recipe<0){toast('Bu malzeme birleşimi için tarif yok.');return {ok:false}}const result=act({type:'craft',recipe});if(result.ok){materialSelection=[];render()}return result};const cb=$('#craft-now');if(cb)cb.onclick=craft;const req=$('#equip-required');if(req)req.onclick=()=>{const id=+req.dataset.requiredTool;if(state.inventory[id]){state.tool=id;selectedTool=id;render()}else toast('Gerekli alet envanterinde yok.')};const ts=$('#tool-select');if(ts)ts.onchange=()=>{selectedTool=+ts.value;state.tool=selectedTool;render()};const rs=$('#recipe-tool');if(rs)rs.onchange=()=>{state.tool=+rs.value;selectedTool=state.tool;render()};
  document.querySelectorAll('[data-craft-recipe]').forEach(b=>b.onclick=e=>{selectedRecipe=+b.dataset.craftRecipe;state.tool=P.recipes[selectedRecipe].tool;act({type:'craft',recipe:selectedRecipe})});
  [['#eat',{type:'eat'}],['#drink',{type:'drink'}],['#rest',{type:'rest'}],['#explore',{type:'explore'}],['#feed-helper',{type:'feed'}],['#collect-helper',{type:'collect'}],['#harvest',{type:'harvest'}]].forEach(([q,a])=>{const b=$(q);if(b)b.onclick=()=>act(a)});
  const send=$('#send-helper');if(send)send.onclick=()=>act({type:'send',resource:selectedResource,minutes:+$('#job-length').value});document.querySelectorAll('[data-resource]').forEach(b=>b.onclick=()=>{selectedResource=+b.dataset.resource;render()});

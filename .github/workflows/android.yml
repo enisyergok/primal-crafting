@@ -40,7 +40,7 @@ jobs:
           mkdir -p build/story-tests
           javac -encoding UTF-8 -d build/story-tests app/src/main/java/com/enisyergok/primalcrafting/GameState.java tests/GameStateTest.java
           java -cp build/story-tests GameStateTest
-          node --test tests/content.test.cjs tests/game.test.cjs tests/progression.test.cjs tests/systems.test.cjs tests/depth.test.cjs
+          node --test tests/content.test.cjs tests/game.test.cjs tests/progression.test.cjs tests/systems.test.cjs tests/depth.test.cjs tests/touch-ui.test.cjs
 
       - name: Enable emulator acceleration
         run: |
