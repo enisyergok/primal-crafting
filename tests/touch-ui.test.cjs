@@ -20,6 +20,12 @@ test('Android material drag has a pointer-event fallback',()=>{
  assert.match(ui,/const group=sheet<4\?'materials':'foods'/);
  assert.match(ui,/function settingsPage\(\)/);
  assert.match(ui,/page='settings'/);
+assert.match(ui,/pref-sound/);
+assert.match(ui,/pref-volume/);
+assert.match(ui,/pref-vibrate/);
+assert.match(ui,/pref-motion/);
+assert.match(ui,/portrait-moods\.png/);
+assert.match(ui,/equip\('Boyun','neck'/);
  assert.match(css,/\.item\[draggable="true"\]\{[^}]*touch-action:none/);
  assert.match(css,/\.item-art svg/);
  assert.match(css,/\.raster-art/);

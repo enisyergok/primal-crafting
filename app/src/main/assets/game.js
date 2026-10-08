@@ -17,7 +17,7 @@ function newGame(now=Date.now()){
   skill:12,skills:registry.skills.map(()=>({level:0,xp:0})),technologies:registry.technologies.map((_,i)=>i===0),tool:-1,durability:{},rng:now>>>0||1234567,discovered:recipes.map((_,i)=>i<3),
   quests:registry.quests.map((q,i)=>({id:q.id,status:i<3?'active':'locked',progress:0})),events:registry.events.map((e,i)=>({id:e.id,resolved:false,active:i===0})),achievements:[],prestige:0,
   stats:{actions:0,gathered:0,crafted:0,events:0,quests:0},regionsVisited:[true,false,false,false],
- helper:{energy:100,gathering:18,lumber:9,body:-1,hand:-1,bag:-1,job:null},
+ helper:{energy:100,gathering:18,lumber:9,body:-1,hand:-1,bag:-1,neck:-1,job:null},
   buildings:{home:1,depot:1,workshop:1,farm:1,fire:1},journal:['Fırtına seni bu kıyıya getirdi. Usta Akın üretimi öğretecek; ormandan Mira’nın sesi geliyor.'],lastFarm:now-300000};
 }
 function validate(s){
@@ -36,7 +36,7 @@ function validate(s){
  if(!s.stats||!['actions','gathered','crafted','events','quests'].every(k=>num(s.stats[k],0,100000000)))bad();
  if(!Array.isArray(s.regionsVisited)||s.regionsVisited.length!==regions.length||!s.regionsVisited.every(v=>typeof v==='boolean'))bad();
  for(const key of Object.keys(buildingNames))if(!num(s.buildings[key],1,5))bad();
- for(const [key,min,max] of [['energy',0,100],['gathering',0,100],['lumber',0,100],['body',-1,19],['hand',-1,19],['bag',-1,19]])if(!num(s.helper[key],min,max))bad();
+ for(const [key,min,max] of [['energy',0,100],['gathering',0,100],['lumber',0,100],['body',-1,19],['hand',-1,19],['bag',-1,19],['neck',-1,123]])if(!num(s.helper[key],min,max))bad();
  for(const key of Object.keys(s.durability))if(!num(s.durability[key],0,1000))bad();
  if(!Array.isArray(s.journal)||s.journal.length>100||!s.journal.every(v=>typeof v==='string'&&v.length<3000)||!Number.isFinite(s.lastFarm))bad();
  if(s.helper.job){const j=s.helper.job;if(!num(j.resource,0,19)||!num(j.amount,1,1000)||!Number.isFinite(j.until)||!Number.isFinite(j.start)||j.until<j.start)bad();}
@@ -156,7 +156,7 @@ function triggerEvent(s,source){
 }
 function costs(s,b){const n=s.buildings[b];return {17:20*n,6:2*n,0:3*n}}
 function helperCapacity(s){return (s.helper.bag===19?16:8)+(s.helper.hand===11?2:0)}
-function helperAmount(s,minutes){return Math.min(helperCapacity(s),Math.max(1,4+minutes-1+(s.helper.gathering>=25?2:0)))}
+function helperAmount(s,minutes){return Math.min(helperCapacity(s),Math.max(1,4+minutes-1+(s.helper.gathering>=25?2:0)+(s.helper.neck===123?1:0)))}
 function useBuilding(s,building,now=Date.now()){
  if(!buildingNames[building])return {ok:false,message:'Bina yok.'};
  if(building==='home'){s.health=Math.min(100,s.health+10);s.energy=Math.min(100,s.energy+15);s.food=Math.max(0,s.food-2);s.water=Math.max(0,s.water-2);advanceQuests(s,'build',building);note(s,'Evde dinlendin.');return {ok:true,message:'Evde dinlendin; sağlık ve enerji yenilendi.'};}
@@ -237,8 +237,8 @@ function reduce(s,a,now=Date.now()){
   if(!s.inventory[j.resource]&&used(s)>=capacity(s))return no('Depoda yer aç; ganimet korunuyor.');
   s.inventory[j.resource]+=j.amount;s.stats.gathered+=j.amount;advanceQuests(s,'gather',j.resource,j.amount);s.helper.gathering=Math.min(100,s.helper.gathering+1);if(j.resource===17)s.helper.lumber=Math.min(100,s.helper.lumber+1);s.helper.job=null;note(s,'Kaya '+j.amount+' '+items[j.resource]+' getirdi.');return yes('Kaynaklar depoya alındı.');
  }
- if(a.type==='helperEquip'){
-  const valid={hand:[11,18],body:[14],bag:[19]};if(s.helper.job)return no('Kaya dönünce ekipmanını değiştir.');
+  if(a.type==='helperEquip'){
+  const valid={hand:[11,18],body:[14],bag:[19],neck:[122,123]};if(s.helper.job)return no('Kaya dönünce ekipmanını değiştir.');
   if(!valid[a.slot]||!valid[a.slot].includes(a.item)||!s.inventory[a.item])return no('Bu ekipman sende yok.');
   if(s.helper[a.slot]>=0)s.inventory[s.helper[a.slot]]++;s.inventory[a.item]--;s.helper[a.slot]=a.item;
   if(s.tool===a.item&&!s.inventory[a.item])s.tool=-1;return yes('Kaya’nın ekipmanı güncellendi.');

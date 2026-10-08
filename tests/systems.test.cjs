@@ -6,6 +6,9 @@ test('helper equipment action consumes the item and updates the loadout',()=>{
   const s=P.newGame(1);s.inventory[11]=1;
   const result=P.reduce(s,{type:'helperEquip',slot:'hand',item:11},1);
   assert.equal(result.ok,true);assert.equal(s.helper.hand,11);assert.equal(s.inventory[11],0);
+  s.inventory[122]=1;
+  const neck=P.reduce(s,{type:'helperEquip',slot:'neck',item:122},1);
+  assert.equal(neck.ok,true);assert.equal(s.helper.neck,122);assert.equal(s.inventory[122],0);
 });
 
 test('each village building has a real action with a state result',()=>{

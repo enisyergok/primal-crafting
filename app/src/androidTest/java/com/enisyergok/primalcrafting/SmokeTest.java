@@ -51,6 +51,10 @@ public final class SmokeTest extends Instrumentation {
         getTargetContext().getSharedPreferences("primal-story",0).edit().clear().commit();
         activity=startActivitySync(new Intent(getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));waitForIdleSync();SystemClock.sleep(700);
         for(String tab:new String[]{"camp","recipes","helper","village","map","journal"}){click("[data-nav='"+tab+"']",tab);shot(tab);}
+        click("#settings");
+        String settings=evaluate("document.querySelector('main').innerText");
+        if(!settings.contains("Konfor")||!settings.contains("Ses efektleri")||!settings.contains("Titreşim"))throw new AssertionError("settings controls missing: "+settings);
+        click("[data-back-camp='1']","camp");
         click("[data-nav='village']","village");click("[data-building='home']");click("[data-building-action]");
         click("[data-nav='camp']","camp");evaluate("app.dispatch({type:'equip',item:0});app.dispatch({type:'craft',recipe:0});'ok'");
         String gatheredBefore=evaluate("String(app.snapshot().inventory[0])");click("[data-gather]");
