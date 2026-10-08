@@ -7,6 +7,14 @@ test('craft consumes coconut but retains the equipped stone and saves discovery'
  assert.equal(s.inventory[2],1);assert.equal(s.inventory[0],3);assert.equal(s.inventory[9],1);
  assert.equal(G.validate(JSON.parse(JSON.stringify(s))).discovered[0],true);
 });
+test('surplus workbench materials craft multiple batches and preserve leftovers',()=>{
+ const s=G.newGame(1000);s.tool=0;s.inventory[2]=3;
+ const plan=G.findRecipePlan([2,2,2],s.tool);assert.deepEqual(plan,{recipeId:0,batches:3,used:{2:3}});
+ assert.equal(G.reduce(s,{type:'craft',recipe:0,quantity:2},1000).ok,true);
+ assert.equal(s.inventory[2],1);assert.equal(s.inventory[9],2);assert.equal(s.inventory[10],2);
+ assert.equal(G.reduce(s,{type:'craft',recipe:0,quantity:1},1000).ok,true);
+ assert.equal(s.inventory[2],0);assert.equal(s.inventory[9],3);
+});
 test('game model uses the full registry and can craft a deep recipe atomically',()=>{
  assert.ok(G);assert.equal(G.items.length,343);assert.equal(G.recipes.length,254);
  const s=G.newGame(1000);const r=G.recipes[12];s.tool=r.tool;s.skill=100;s.inventory[r.tool]=1;for(const [id,n] of Object.entries(r.input))s.inventory[id]=n;

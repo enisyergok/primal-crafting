@@ -281,9 +281,15 @@ function bind(){
  const craft=()=>{
   if(page==='recipes')return quickCraft(selectedRecipe);
   if(!materialSelection.length)return toast('Önce çantadan malzeme seç.');
-  const recipe=P.findRecipe(materialSelection,state.tool);
-  if(recipe<0)return toast('Bu birleşim sonuç vermedi. Aleti ve malzeme adetlerini değiştir; hiçbir malzeme harcanmadı.');
-  const result=act({type:'craft',recipe});if(result.ok){materialSelection=[];render()}return result;
+  const plan=P.findRecipePlan(materialSelection,state.tool);
+  if(!plan)return toast('Bu birleşim sonuç vermedi. Aleti ve malzeme adetlerini değiştir; hiçbir malzeme harcanmadı.');
+  const result=act({type:'craft',recipe:plan.recipeId,quantity:plan.batches});
+  if(result.ok){
+   const remaining=[],used={...(result.consumedInputs||{})};
+   for(const id of materialSelection){if(used[id]>0)used[id]--;else remaining.push(id)}
+   materialSelection=remaining;render();
+  }
+  return result;
  };
  const craftButton=$('#craft-now');if(craftButton)craftButton.onclick=craft;
  const toolSelect=$('#tool-select');if(toolSelect)toolSelect.onchange=()=>{selectedTool=+toolSelect.value;act({type:'equip',item:selectedTool})};

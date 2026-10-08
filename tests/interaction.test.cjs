@@ -42,9 +42,9 @@ test('touch tap, horizontal shelf and material removal work without dragging',()
  assert.equal(await page.locator('[data-remove-material]').count(),2);
  await page.locator('[data-remove-material="1"]').tap();assert.equal(await page.locator('[data-remove-material]').count(),1);
  await page.locator('[data-clear-material]').tap();
- await page.locator('[data-item="0"]').tap();await page.locator('[data-item="0"]').tap();
+ await page.locator('[data-item="0"]').tap();await page.locator('[data-item="0"]').tap();await page.locator('[data-item="0"]').tap();
  await page.locator('#craft-now').tap();
- assert.equal((await page.evaluate(()=>app.snapshot())).inventory[5],1);
+ const batch=await page.evaluate(()=>app.snapshot());assert.equal(batch.inventory[0],1);assert.equal(batch.inventory[5],1);
  await page.locator('[data-inspect="5"]').tap();await page.locator('[data-equip-item="5"]').tap();
  assert.equal((await page.evaluate(()=>app.snapshot())).tool,5);
  await page.locator('[data-close-detail]').tap();

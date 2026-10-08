@@ -91,10 +91,24 @@ function migrate(old){
  refreshQuests(s);
  return validate(s);
 }
-function findRecipe(list,tool){
+function findRecipePlan(list,tool){
  const input={};for(const id of list)input[id]=(input[id]||0)+1;
- return recipes.findIndex(r=>toolMatches(tool,r.tool)&&Object.keys(r.input).length===Object.keys(input).length&&Object.keys(r.input).every(k=>r.input[k]===input[k]));
+ let best=null;
+ for(const r of recipes){
+  if(!toolMatches(tool,r.tool))continue;
+  const selectedIds=Object.keys(input),recipeIds=Object.keys(r.input);
+  if(selectedIds.some(id=>!Object.prototype.hasOwnProperty.call(r.input,id)))continue;
+  if(recipeIds.some(id=>!input[id]))continue;
+  const batches=Math.min(...recipeIds.map(id=>Math.floor(input[id]/r.input[id])));
+  if(batches>0){
+   const specificity=recipeIds.reduce((sum,id)=>sum+r.input[id],0);
+   if(!best||specificity>best.specificity)best={recipeId:r.id,batches,used:Object.fromEntries(recipeIds.map(id=>[id,r.input[id]*batches])),specificity};
+  }
+ }
+ if(best)delete best.specificity;
+ return best;
 }
+function findRecipe(list,tool){return findRecipePlan(list,tool)?.recipeId??-1;}
 function note(s,t){s.journal.push('Gün '+s.day+' · '+t);s.journal=s.journal.slice(-80)}
 function spend(s,n){s.energy=Math.max(0,s.energy-Math.max(1,n-(s.technologies[13]?1:0)));s.food=Math.max(0,s.food-2);s.water=Math.max(0,s.water-3);s.minutes+=30;if(s.minutes>=1440){s.minutes-=1440;s.day++}if(!s.food||!s.water)s.health=Math.max(0,s.health-5);const exposure=Math.max(0,Math.abs(temperature(s)-24)-protection(s)-12);s.health=Math.max(0,s.health-Math.ceil(exposure/8));gainSkill(s,13,4);}
 function rand(s){let x=s.rng;x^=x<<13;x^=x>>>17;x^=x<<5;s.rng=x>>>0;return s.rng/4294967296}
@@ -211,7 +225,7 @@ function updateAchievements(s){
 function achievementStatus(s,id){return (s.achievements||[]).includes(id)?'unlocked':'locked'}
 function statistics(s){return {items:s.inventory.filter(n=>n>0).length,recipes:s.discovered.filter(Boolean).length,quests:s.quests.filter(q=>q.status==='complete').length,chapter:s.chapter+1,achievements:(s.achievements||[]).length}}
 function reduce(s,a,now=Date.now()){
- const no=message=>({ok:false,message});const yes=message=>{s.stats.actions++;refreshQuests(s);updateAchievements(s);return {ok:true,message}};
+ const no=message=>({ok:false,message});const yes=(message,extra={})=>{s.stats.actions++;refreshQuests(s);updateAchievements(s);return {ok:true,message,...extra}};
  if(!a||typeof a.type!=='string')return no('Geçersiz işlem.');
  if(s.health<=0)return no('Yolculuğun sona erdi. Kayıt yükle veya yeni oyun başlat.');
  const ready=n=>s.energy>=n;
@@ -224,14 +238,23 @@ function reduce(s,a,now=Date.now()){
  if(a.type==='craft'){
   const r=recipes[a.recipe];if(!r)return no('Bu birleşimden bir tarif çıkmadı.');
   if(!toolMatches(s.tool,r.tool)||(r.tool>=0&&!availableTool(s,s.tool)))return no('Gerekli alet: '+(r.tool<0?'El':items[r.tool]));
-  if(!enough(r.input))return no('Malzeme eksik. Kırmızı adetleri kontrol et.');
+  const quantity=Number(a.quantity??1);if(!Number.isInteger(quantity)||quantity<1)return no('Geçersiz üretim adedi.');
+  const batchInput=Object.fromEntries(Object.entries(r.input).map(([id,n])=>[id,n*quantity]));
+  if(!enough(batchInput))return no('Malzeme eksik. Kırmızı adetleri kontrol et.');
   if(r.out===16&&(s.chapter<3||s.region!==0||!s.lens))return no('Merceği bulup kıyıya dönmelisin.');
-  if(!ready(5))return no('Enerjin yetmiyor; yemek ye veya dinlen.');
-  const projected=s.inventory.map((n,id)=>n-(r.input[id]||0)+(id===r.out?1:0)+(id===r.extra?1:0));
+  const projected=s.inventory.map((n,id)=>n-(batchInput[id]||0)+(id===r.out?quantity:0)+(id===r.extra?quantity:0));
   if(projected.filter(n=>n>0).length>capacity(s))return no('Depo dolu. Önce alan aç.');
-  const success=rand(s)>=1-chance(s,r)/100;take(r.input);spend(s,5);wear(s,s.tool);
-  if(success){gainSkill(s,r.skill,12);s.skill=Math.min(100,s.skill+1);s.inventory[r.out]++;if(r.extra!==undefined)s.inventory[r.extra]++;s.discovered[a.recipe]=true;s.stats.crafted++;advanceQuests(s,'craft',r.out);if(registry.items[r.out].toolKind)s.durability[r.out]=25;note(s,r.name+' üretildi.');return yes(r.name+' üretildi!')}
-  s.skill=Math.min(100,s.skill+2);note(s,'Deneme başarısız; ustalık +2.');return yes('Üretim tutmadı. Ustalık +2; sonraki denemede şansın arttı.');
+  const cost=Math.max(1,5-(s.technologies[13]?1:0));let attempted=0,successes=0;
+  for(;attempted<quantity&&s.energy>=cost;attempted++){
+   if(r.tool>=0&&!availableTool(s,s.tool))break;
+   take(r.input);spend(s,5);wear(s,s.tool);
+   if(rand(s)>=1-chance(s,r)/100){
+    successes++;gainSkill(s,r.skill,12);s.skill=Math.min(100,s.skill+1);s.inventory[r.out]++;if(r.extra!==undefined)s.inventory[r.extra]++;s.discovered[a.recipe]=true;s.stats.crafted++;advanceQuests(s,'craft',r.out);if(registry.items[r.out].toolKind)s.durability[r.out]=25;
+   }else{s.skill=Math.min(100,s.skill+2);}
+  }
+  if(!attempted)return no('Üretim için enerjin veya alet dayanıklılığın yetmiyor.');
+  note(s,successes===attempted?`${successes} × ${r.name} üretildi.`:`${successes}/${attempted} ${r.name} üretildi; başarısız denemeler ustalık kazandırdı.`);
+  return yes(successes===attempted?`${successes} × ${r.name} üretildi!`:`${successes}/${attempted} üretim başarılı.`,{crafted:successes,attempted,consumedInputs:Object.fromEntries(Object.entries(r.input).map(([id,n])=>[id,n*attempted]))});
  }
  if(a.type==='gather'){
   if(!ready(8))return no('Toplamak için 8 enerji gerekli.');
@@ -344,6 +367,6 @@ function reduce(s,a,now=Date.now()){
  if(a.type==='quest')return no('Görevler yaptığın eylemlerle ilerler; günlükten hedefi takip et.');
  return no('Bilinmeyen işlem.');
 }
-const api={owned,availableTool,gatherSkill,gatherBonus,isTool,toolMatches,temperature,protection,choiceOptions,questTarget,refreshQuests,items,itemData:registry.items,recipes,regions,buildingNames,skills:registry.skills,technologies:registry.technologies,quests:registry.quests,events:registry.events,achievements:registry.achievements,storyBeats:registry.storyBeats,newGame,newGamePlus,validate,migrate,findRecipe,reduce,chance,capacity,used,gatherOptions,objective,dialogue,costs,skillCheck,technologyCost,unlockTechnology,questStatus,completeQuest,advanceQuests,triggerEvent,helperCapacity,helperAmount,applyEvent,useBuilding,updateAchievements,achievementStatus,statistics};
+const api={owned,availableTool,gatherSkill,gatherBonus,isTool,toolMatches,temperature,protection,choiceOptions,questTarget,refreshQuests,items,itemData:registry.items,recipes,regions,buildingNames,skills:registry.skills,technologies:registry.technologies,quests:registry.quests,events:registry.events,achievements:registry.achievements,storyBeats:registry.storyBeats,newGame,newGamePlus,validate,migrate,findRecipe,findRecipePlan,reduce,chance,capacity,used,gatherOptions,objective,dialogue,costs,skillCheck,technologyCost,unlockTechnology,questStatus,completeQuest,advanceQuests,triggerEvent,helperCapacity,helperAmount,applyEvent,useBuilding,updateAchievements,achievementStatus,statistics};
 if(typeof module!=='undefined')module.exports=api;else root.Primal=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
