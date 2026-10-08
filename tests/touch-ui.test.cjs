@@ -17,6 +17,14 @@ test('Android material drag has a pointer-event fallback',()=>{
  assert.match(ui,/function itemArt\(id\)/);
  assert.match(ui,/P\.itemData/);
  assert.match(ui,/const rasterIcons/);
+ assert.match(ui,/advanced-tools\.png/);
+ assert.match(ui,/advanced-tools-02\.png/);
+ assert.match(ui,/advanced-clothing\.png/);
+ assert.match(ui,/advanced-structures\.png/);
+ assert.match(ui,/advanced-medicine\.png/);
+ assert.match(ui,/advanced-late\.png/);
+ assert.match(ui,/advanced-keepsakes\.png/);
+ assert.match(ui,/generatedIcons/);
  assert.match(ui,/const group=sheet<4\?'materials':'foods'/);
  assert.match(ui,/function settingsPage\(\)/);
  assert.match(ui,/page='settings'/);

@@ -17,7 +17,37 @@ const rasterIcons={
   46:[3,0,0],47:[3,1,0],48:[3,2,0],49:[3,3,0],50:[3,0,1],51:[3,1,1],52:[3,2,1],53:[3,3,1],54:[3,0,2],55:[3,1,2],
   56:[4,0,0],57:[4,1,0],58:[4,2,0],59:[4,3,0],60:[4,0,1],61:[4,1,1],62:[4,2,1],63:[4,3,1],64:[4,0,2],65:[4,1,2],66:[4,2,2],67:[4,3,2],68:[4,0,3],69:[4,1,3],70:[4,2,3],71:[4,3,3],72:[5,0,0],73:[5,1,0],74:[5,2,0],75:[5,3,0],76:[5,0,1],77:[5,1,1],78:[5,2,1],79:[5,3,1],80:[5,0,2],81:[5,1,2],82:[5,2,2],83:[5,3,2],84:[5,0,3],85:[5,1,3]
 };
+const generatedIcons={
+  86:['advanced-tools.png',0,0],87:['advanced-tools.png',1,0],88:['advanced-tools.png',2,0],89:['advanced-tools.png',3,0],
+  90:['advanced-tools.png',0,1],91:['advanced-tools.png',1,1],92:['advanced-tools.png',2,1],93:['advanced-tools.png',3,1],
+  94:['advanced-tools.png',0,2],95:['advanced-tools.png',1,2],96:['advanced-tools.png',2,2],97:['advanced-tools.png',3,2],
+  98:['advanced-tools.png',0,3],99:['advanced-tools.png',1,3],100:['advanced-tools.png',2,3],101:['advanced-tools.png',3,3],
+  102:['advanced-tools-02.png',0,0],103:['advanced-tools-02.png',1,0],104:['advanced-tools-02.png',2,0],105:['advanced-tools-02.png',3,0],
+  106:['advanced-tools-02.png',0,1],107:['advanced-tools-02.png',1,1],108:['advanced-tools-02.png',2,1],109:['advanced-tools-02.png',3,1],
+  110:['advanced-tools-02.png',0,2],111:['advanced-tools-02.png',1,2],112:['advanced-tools-02.png',2,2],113:['advanced-tools-02.png',3,2],
+  114:['advanced-tools-02.png',0,3],115:['advanced-tools-02.png',1,3],116:['advanced-tools-02.png',2,3],117:['advanced-tools-02.png',3,3],
+  118:['advanced-clothing.png',0,0],119:['advanced-clothing.png',1,0],120:['advanced-clothing.png',2,0],121:['advanced-clothing.png',3,0],
+  122:['advanced-clothing.png',0,1],123:['advanced-clothing.png',1,1],124:['advanced-clothing.png',2,1],125:['advanced-clothing.png',3,1],
+  126:['advanced-clothing.png',0,2],127:['advanced-clothing.png',1,2],128:['advanced-clothing.png',2,2],129:['advanced-clothing.png',3,2],
+  130:['advanced-clothing.png',0,3],131:['advanced-clothing.png',1,3],
+  132:['advanced-structures.png',0,0],133:['advanced-structures.png',1,0],134:['advanced-structures.png',2,0],135:['advanced-structures.png',3,0],
+  136:['advanced-structures.png',0,1],137:['advanced-structures.png',1,1],138:['advanced-structures.png',2,1],139:['advanced-structures.png',3,1],
+  140:['advanced-structures.png',0,2],141:['advanced-structures.png',1,2],142:['advanced-structures.png',2,2],143:['advanced-structures.png',3,2],
+  144:['advanced-structures.png',0,3],145:['advanced-structures.png',1,3],146:['advanced-structures.png',2,3],147:['advanced-structures.png',3,3],
+  152:['advanced-medicine.png',0,0],153:['advanced-medicine.png',1,0],154:['advanced-medicine.png',2,0],155:['advanced-medicine.png',3,0],
+  156:['advanced-medicine.png',0,1],157:['advanced-medicine.png',1,1],158:['advanced-medicine.png',2,1],159:['advanced-medicine.png',3,1],
+  160:['advanced-medicine.png',0,2],161:['advanced-medicine.png',1,2],162:['advanced-medicine.png',2,2],163:['advanced-medicine.png',3,2],
+  164:['advanced-medicine.png',0,3],165:['advanced-medicine.png',1,3],166:['advanced-medicine.png',2,3],167:['advanced-medicine.png',3,3],
+  148:['advanced-late.png',1,0],149:['advanced-late.png',2,0],150:['advanced-late.png',3,0],151:['advanced-late.png',0,0],
+  168:['advanced-late.png',0,1],169:['advanced-late.png',1,1],170:['advanced-late.png',2,1],171:['advanced-late.png',3,1],
+  188:['advanced-late.png',0,2],189:['advanced-late.png',1,2],
+  172:['advanced-keepsakes.png',0,0],173:['advanced-keepsakes.png',1,0],174:['advanced-keepsakes.png',2,0],175:['advanced-keepsakes.png',3,0],
+  176:['advanced-keepsakes.png',0,1],177:['advanced-keepsakes.png',1,1],178:['advanced-keepsakes.png',2,1],179:['advanced-keepsakes.png',3,1],
+  180:['advanced-keepsakes.png',0,2],181:['advanced-keepsakes.png',1,2],182:['advanced-keepsakes.png',2,2],183:['advanced-keepsakes.png',3,2],
+  184:['advanced-keepsakes.png',0,3],185:['advanced-keepsakes.png',1,3],186:['advanced-keepsakes.png',2,3],187:['advanced-keepsakes.png',3,3]
+};
 function rasterIcon(id,cls){const [sheet,col,row]=rasterIcons[id];const x=col*33.333333,y=row*33.333333;const group=sheet<4?'materials':'foods';const local=sheet<4?sheet:sheet-3;return `<span class="item-art raster-art ${cls}" style="background-image:url('art/${group}-0${local}.png');background-position:${x}% ${y}%;background-size:400% 400%" aria-hidden="true"></span>`}
+function generatedIcon(id,cls){const [file,col,row]=generatedIcons[id],x=col*33.333333,y=row*33.333333;return `<span class="item-art raster-art ${cls}" style="background-image:url('art/${file}');background-position:${x}% ${y}%;background-size:400% 400%" aria-hidden="true"></span>`}
 function itemArt(id){
  const item=P.itemData?.[id]||{};const name=(item.name||P.items[id]||'').toLocaleLowerCase('tr-TR');const category=item.category||'Malzeme';const hue=(id*37)%360;const fill=`hsl(${hue} 42% 62%)`;
  const wrap=body=>`<svg viewBox="0 0 80 80" role="img" aria-label="${esc(P.items[id])}" xmlns="http://www.w3.org/2000/svg"><g stroke="${artInk}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${body}</g></svg>`;
@@ -47,7 +77,7 @@ function itemArt(id){
  if(item.tags?.includes('container')||/kabuk|deniz|mercan|kil/.test(name))return wrap(`<path fill="#b97b48" d="M17 34c4 22 42 22 46 0-7 8-39 8-46 0Z"/><path fill="#efd09a" d="M17 34c3-12 43-12 46 0-9 8-37 8-46 0Z"/>`);
  return wrap(`<path fill="${fill}" d="m14 47 12-28 32-6 10 27-20 22-28-4Z"/><path d="m28 25 16 12 14-18" fill="none" stroke="#e8d2a0"/>`);
 }
-const icon=(id,cls='')=>rasterIcons[id]?rasterIcon(id,cls):id<24?`<span class="sprite ${cls}" style="background-position:${(id%6)*20}% ${Math.floor(id/6)*33.333}%" aria-hidden="true"></span>`:`<span class="item-art ${cls}" aria-hidden="true">${itemArt(id)}</span>`;
+const icon=(id,cls='')=>rasterIcons[id]?rasterIcon(id,cls):generatedIcons[id]?generatedIcon(id,cls):id<24?`<span class="sprite ${cls}" style="background-position:${(id%6)*20}% ${Math.floor(id/6)*33.333}%" aria-hidden="true"></span>`:`<span class="item-art ${cls}" aria-hidden="true">${itemArt(id)}</span>`;
 const button=(label,attrs='',cls='secondary')=>`<button class="${cls}" ${attrs}>${label}</button>`;
 function load(){
   try {
