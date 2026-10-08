@@ -56,6 +56,15 @@ jobs:
           disable-animations: true
           script: bash tests/device-smoke.sh
 
+      - name: Upload smoke diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: primal-device-smoke-diagnostics
+          path: build/device-smoke.log
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:

@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
+mkdir -p build
+exec > >(tee build/device-smoke.log) 2>&1
+trap 'adb shell wm size reset >/dev/null 2>&1 || true; adb shell wm density reset >/dev/null 2>&1 || true' EXIT
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 for size in 720x1280 1080x2400 1600x2560 1280x720; do
@@ -18,6 +21,8 @@ for size in 720x1280 1080x2400 1600x2560 1280x720; do
     fi
     adb shell am force-stop com.enisyergok.primalcrafting || true
     adb shell pm clear com.enisyergok.primalcrafting || true
+    adb shell dumpsys activity activities | tail -n 80 || true
+    adb shell logcat -d -t 200 -v brief | tail -n 200 || true
     sleep 2
   done
   test "$passed" -eq 1
