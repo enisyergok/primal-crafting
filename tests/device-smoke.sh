@@ -25,7 +25,15 @@ for size in 720x1280 1080x2400 1600x2560 1280x720; do
     adb shell logcat -d -t 200 -v brief | tail -n 200 || true
     sleep 2
   done
-  test "$passed" -eq 1
+  if [ "$passed" -ne 1 ]; then
+    {
+      echo "## Android smoke failure at $size"
+      echo '```text'
+      printf '%s\n' "$result"
+      echo '```'
+    } >> "${GITHUB_STEP_SUMMARY:-build/device-smoke-summary.md}"
+    exit 1
+  fi
   mkdir -p "build/screenshots/$size"
   adb pull /sdcard/Android/data/com.enisyergok.primalcrafting/files/. "build/screenshots/$size/"
 done
