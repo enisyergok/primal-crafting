@@ -55,6 +55,8 @@ public final class SmokeTest extends Instrumentation {
         String settings=evaluate("document.querySelector('main').innerText");
         if(!settings.contains("Konfor")||!settings.contains("Ses efektleri")||!settings.contains("Titreşim"))throw new AssertionError("settings controls missing: "+settings);
         click("[data-back-camp='1']","camp");
+        String inventoryOverflow=evaluate("getComputedStyle(document.querySelector('.inventory')).overflowX");
+        if(!inventoryOverflow.contains("auto"))throw new AssertionError("inventory shelf is not horizontally scrollable: "+inventoryOverflow);
         click("[data-nav='village']","village");click("[data-building='home']");click("[data-building-action]");
         click("[data-nav='camp']","camp");evaluate("app.dispatch({type:'equip',item:0});app.dispatch({type:'craft',recipe:0});'ok'");
         String gatheredBefore=evaluate("String(app.snapshot().inventory[0])");click("[data-gather]");

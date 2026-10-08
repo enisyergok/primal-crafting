@@ -11,6 +11,12 @@ main{scroll-padding:10px}
 .camp-intro p{margin:0;max-width:58%;font-size:11px;color:var(--muted);line-height:1.3}
 .inventory-toolbar{display:flex;align-items:center;justify-content:space-between;margin:4px 2px;color:var(--muted);font-size:12px}
 .inventory-toolbar b{font-size:15px;color:var(--ink)}
+.inventory{display:flex;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;gap:7px;padding:2px 2px 9px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:#987443 transparent}
+.inventory .item{flex:0 0 clamp(118px,38vw,145px);min-height:118px;scroll-snap-align:start}
+.inventory::-webkit-scrollbar{height:7px}.inventory::-webkit-scrollbar-thumb{background:#987443;border-radius:8px}
+.inventory-toolbar .swipe-hint{font-size:11px;color:var(--muted)}
+.item[draggable="true"]{touch-action:pan-x}
+@media(min-width:600px){.inventory .item{flex-basis:145px}}
 .inventory{margin-bottom:8px}
 .inventory .item{min-height:122px}
 .gathering-panel{border-color:#7d9b69;background:linear-gradient(135deg,#fff2c8,#e7edc7)}

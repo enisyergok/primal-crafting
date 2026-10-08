@@ -98,7 +98,7 @@ function gatheringPanel(){
  return `<section class="panel gathering-panel"><div class="row"><div class="grow"><h2>Kaynak toplama</h2><p class="muted">${esc(P.regions[state.region])} · Dokunarak kaynak topla. Aleti ele takınca özel kaynaklar açılır.</p></div>${button(axe?'Odun kes':'Topla',axe?'data-gather-kind="wood"':'data-gather="1"','wood')}</div><div class="gather-grid">${shown.map(id=>button(`${icon(id,'mini')} ${esc(P.items[id])}`,`data-gather-resource="${id}"`,'secondary')).join('')}</div>${extra.length?`<details><summary>Diğer kaynaklar · ${extra.length}</summary><div class="gather-grid">${extra.map(id=>button(`${icon(id,'mini')} ${esc(P.items[id])}`,`data-gather-resource="${id}"`,'secondary')).join('')}</div></details>`:''}</section>`;
 }
 function camp(){
- const ids=state.inventory.map((n,i)=>n?i:-1).filter(i=>i>=0);return `<div class="camp-intro"><div><h1>Kamp ve envanter</h1><p>Kaynaklara dokunarak seç veya üretim masasına sürükle.</p></div></div>${tabs('all')}<div class="inventory-toolbar"><b>Çanta</b><span>${ids.length}/${P.items.length} eşya türü</span></div><div class="inventory">${ids.map(id=>itemCard(id)).join('')}</div>
+ const ids=state.inventory.map((n,i)=>n?i:-1).filter(i=>i>=0);return `<div class="camp-intro"><div><h1>Kamp ve envanter</h1><p>Kaynaklara dokunarak seç veya üretim masasına sürükle.</p></div></div>${tabs('all')}<div class="inventory-toolbar"><b>Çanta</b><span>${ids.length}/${P.items.length} eşya türü · <span class="swipe-hint">yana kaydır ↔</span></span></div><div class="inventory">${ids.map(id=>itemCard(id)).join('')}</div>
  <section class="panel"><h2>Üretim masası</h2><div class="workbench"><div><h3>Malzeme</h3><div id="material-drop" class="dropzone" data-drop="material">${materialSelection.length?materialSelection.map(id=>`<span class="chip">${icon(id,'mini')}<b>${esc(P.items[id])}</b></span>`).join(''):'<span class="hint">Malzemeleri buraya sürükle</span>'}${materialSelection.length?button('Temizle','data-clear-material="1"','secondary'):''}</div></div><div><h3>Alet</h3><select id="tool-select" class="tool-select"><option value="-1">El ile</option>${[0,5,7,11,18].filter(i=>state.inventory[i]).map(i=>`<option value="${i}" ${selectedTool===i?'selected':''}>${esc(P.items[i])}</option>`).join('')}</select></div></div>${button('✦ Üret','id="craft-now"','wood primary')}<div class="task">⚑ ${esc(P.objective(state))}</div></section>${gatheringPanel()}
  <div class="actions">${button('🍖 Ye','id="eat"')}${button('💧 Su iç','id="drink"')}${button('☼ Dinlen','id="rest"')}${button('⌁ Keşif','id="explore"')}</div>`
 }
@@ -132,14 +132,18 @@ function bind(){
   el.ondragstart=e=>{dragId=id;e.dataTransfer.setData('text/plain',dragId)};
   el.onpointerdown=e=>{
    if(e.pointerType==='mouse')return;
-   pointerDrag={id,startX:e.clientX,startY:e.clientY,moved:false,ghost:null};
-   el.setPointerCapture?.(e.pointerId);e.preventDefault();
+   pointerDrag={id,startX:e.clientX,startY:e.clientY,moved:false,axis:null,ghost:null,pointerId:e.pointerId};
   };
   el.onpointermove=e=>{
    if(!pointerDrag||pointerDrag.id!==id)return;
-   const moved=Math.hypot(e.clientX-pointerDrag.startX,e.clientY-pointerDrag.startY)>8;
-   if(moved&&!pointerDrag.moved){
+   const dx=e.clientX-pointerDrag.startX,dy=e.clientY-pointerDrag.startY;
+   const moved=Math.hypot(dx,dy)>8;
+   if(!moved)return;
+   if(!pointerDrag.axis)pointerDrag.axis=Math.abs(dx)>Math.abs(dy)?'scroll':'drag';
+   if(pointerDrag.axis==='scroll'){suppressClickUntil=Date.now()+500;pointerDrag=null;return}
+   if(!pointerDrag.moved){
     pointerDrag.moved=true;
+    el.setPointerCapture?.(e.pointerId);
     const ghost=el.cloneNode(true);ghost.className='drag-ghost';document.body.appendChild(ghost);pointerDrag.ghost=ghost;
    }
    if(pointerDrag.moved&&pointerDrag.ghost){pointerDrag.ghost.style.left=e.clientX+'px';pointerDrag.ghost.style.top=e.clientY+'px';e.preventDefault()}
