@@ -3,8 +3,10 @@
     <style name="Theme.PrimalCrafting" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:fontFamily">sans</item>
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:statusBarColor">#102A2E</item>
-        <item name="android:navigationBarColor">#0B1D20</item>
+        <item name="android:statusBarColor">#21140E</item>
+        <item name="android:navigationBarColor">#160D09</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:navigationBarDividerColor">#3B2115</item>
         <item name="android:windowActionModeOverlay">true</item>
     </style>
 </resources>

@@ -22,8 +22,8 @@ public final class MainActivity extends Activity {
         super.onCreate(state);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         if(Build.VERSION.SDK_INT>=30)getWindow().setDecorFitsSystemWindows(true);
-        getWindow().setStatusBarColor(Color.rgb(38,28,18));
-        getWindow().setNavigationBarColor(Color.rgb(38,28,18));
+        getWindow().setStatusBarColor(Color.rgb(33,20,14));
+        getWindow().setNavigationBarColor(Color.rgb(22,13,9));
         saves=getSharedPreferences("primal-story",MODE_PRIVATE);
         web=new WebView(this);
         WebSettings settings=web.getSettings();

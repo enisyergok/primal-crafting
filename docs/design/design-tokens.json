@@ -1,0 +1,9 @@
+{
+  "ink": { "default": "#2b1a10", "soft": "#6b4a2b" },
+  "paper": { "base": "#f3dfb0", "highlight": "#fff5d5", "low": "#dfc187" },
+  "wood": { "espresso": "#21140e", "walnut": "#3b2115", "highlight": "#5d3820" },
+  "metal": { "copper": "#c88835", "highlight": "#efc36b" },
+  "world": { "moss": "#55783c", "water": "#2d7776", "danger": "#a13e2b" },
+  "touchTarget": "46px",
+  "radius": { "control": "9px", "panel": "11px", "shell": "20px" }
+}
