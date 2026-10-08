@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
 test('PRIMAL registry contains the full depth target',()=>{
   const C=require('../app/src/main/assets/content.js');
   assert.equal(C.items.length,343);
-  assert.equal(C.recipes.length,237);
+  assert.equal(C.recipes.length,254);
   assert.equal(C.quests.length,87);
   assert.equal(C.skills.length,15);
   assert.equal(C.items.some(item=>/^(İnce|Sağlam|Oyma|Kurutulmuş|Parlak|Örgü|Keskin|Sıcak|Soğuk|Közlenmiş|Büyük|Usta) (malzeme|yiyecek|araç|giysi|yapı|tıp|süs|bilgi) \d+$/i.test(item.name)),false,'generated items must have real names');

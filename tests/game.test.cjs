@@ -8,8 +8,8 @@ test('craft consumes coconut but retains the equipped stone and saves discovery'
  assert.equal(G.validate(JSON.parse(JSON.stringify(s))).discovered[0],true);
 });
 test('game model uses the full registry and can craft a deep recipe atomically',()=>{
- assert.ok(G);assert.equal(G.items.length,343);assert.equal(G.recipes.length,237);
- const s=G.newGame(1000);const r=G.recipes[12];s.tool=r.tool;s.skill=100;s.inventory[5]=2;s.inventory[245]=2;
+ assert.ok(G);assert.equal(G.items.length,343);assert.equal(G.recipes.length,254);
+ const s=G.newGame(1000);const r=G.recipes[12];s.tool=r.tool;s.skill=100;s.inventory[r.tool]=1;for(const [id,n] of Object.entries(r.input))s.inventory[id]=n;
  assert.equal(G.reduce(s,{type:'craft',recipe:12},1000).ok,true);
  assert.equal(s.inventory[r.output],1);assert.equal(s.discovered[12],true);
 });
@@ -79,7 +79,7 @@ test('gathering exposes regional roots and targeted gathering reaches deep recip
 });
 test('equipped axe wears out while lumberjacking',()=>{
  assert.ok(G);const s=G.newGame(1);s.inventory[11]=1;s.tool=11;s.durability[11]=1;
- assert.equal(G.reduce(s,{type:'gather',kind:'wood'},1).ok,true);assert.equal(s.inventory[17],2);assert.equal(s.inventory[11],0);assert.equal(s.tool,-1);
+ assert.equal(G.reduce(s,{type:'gather',kind:'wood'},1).ok,true);assert.equal(s.inventory[17],3);assert.equal(s.inventory[11],0);assert.equal(s.tool,-1);
 });
 test('both story routes reach their endings and survive serialization',()=>{
  assert.ok(G);

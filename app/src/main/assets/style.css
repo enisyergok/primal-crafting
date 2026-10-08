@@ -115,6 +115,27 @@ h3{color:#4a2e16}
 .recipe-card.unknown:hover,.recipe-card.unknown:active{border-color:#c19a60;transform:none;filter:grayscale(.7);background:linear-gradient(135deg,#f6e7c5,#e6cf9e)}
 .recipe-mystery{display:inline-flex;width:72px;height:72px;align-items:center;justify-content:center;border:2px dashed #a98b5d;border-radius:50%;background:#ead5a6;color:#886b43;font-size:32px;font-weight:bold;flex-shrink:0}
 .recipe-progress{margin:0 0 6px}
+.item-wrap{min-width:0;display:flex;flex-direction:column;scroll-snap-align:start}
+.item-wrap .item{width:100%;flex:1}
+.item-wrap[hidden]{display:none!important}
+.item-info{min-height:44px;border:1px solid #a77538;border-radius:0 0 8px 8px;background:#fff0c7;font-size:12px}
+.item-detail p{margin:8px 0;line-height:1.5}
+.item-detail .item-art,.item-detail .sprite{width:72px;height:72px}
+.scroll-tabs{overflow-x:auto;justify-content:flex-start}
+.scroll-tabs button{flex:0 0 auto;padding:8px 14px;min-height:44px}
+.ready-filter{display:flex;align-items:center;gap:8px;min-height:44px;font-size:13px}
+.ready-filter input{min-height:24px;width:24px;height:24px;accent-color:#55783c}
+.recipe-card.unknown{opacity:1;filter:none}
+.recipe-card.unknown:hover,.recipe-card.unknown:active{filter:none}
+.recipe-card p{line-height:1.5}
+.recipe-card .row{flex-wrap:wrap;margin-top:6px}
+.recipe-card button{min-width:72px;min-height:44px}
+.story-choices{display:grid;gap:8px;margin-top:12px}
+.story-choices button{min-height:52px;text-align:left;padding:12px;line-height:1.5}
+.quest-row{padding:12px 0;border-bottom:1px solid #b9955a66;line-height:1.5}
+.material-chip{display:inline-flex;align-items:center;min-height:44px;max-width:100%;border:1px solid #a88148;background:#fff0c7;border-radius:8px;padding:4px;font-size:12px}
+.dropzone .hint{font-size:13px;letter-spacing:normal;line-height:1.5;padding:10px;color:#705333}
+.task button{display:block;margin-top:8px}
 .recipe-card>.sprite,.recipe-card>.item-art{width:72px;height:72px}
 .recipe-card.selected{outline:2px solid #a9651f;box-shadow:inset 0 0 0 2px #fff0b4,0 4px 8px #8c501e44}
 .recipe-search{min-height:46px;border-radius:10px;border-color:#c19a60;background:#fff4d2;box-shadow:inset 0 1px #fffce9,0 2px 4px #75481d22}
@@ -143,3 +164,22 @@ nav .sprite,nav .item-art{width:36px;height:36px;filter:drop-shadow(0 2px 2px #0
 #toast{bottom:88px;border:1px solid #e4b765;border-radius:10px;background:linear-gradient(145deg,#3c281bfa,#1b110cf8);box-shadow:0 7px 18px #000b,inset 0 1px #fff0b544;padding:13px 15px}
 @media(max-width:370px){#app{padding:6px;border-radius:16px}main{padding:9px 7px 13px}.inventory .item{min-height:116px}.inventory .item .sprite,.inventory .item .item-art{width:70px;height:70px}.header-tools button{width:41px;height:41px}.stat .symbol{font-size:21px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
+.inventory .item-wrap{flex:0 0 clamp(124px,38vw,148px);min-width:0}
+.inventory .item-wrap .item{flex:1 0 auto;width:100%}
+.item-wrap[hidden]{display:none!important}
+.scroll-tabs{display:flex;overflow-x:auto;gap:6px;scrollbar-width:thin}
+.scroll-tabs button{flex:0 0 auto;min-width:76px;min-height:44px}
+.portrait,.item-art{flex-shrink:0}
+.inputs{display:flex;flex-wrap:wrap;justify-content:center}
+.inputs .ingredient{flex:0 1 110px;min-width:0}
+.ingredient b{overflow-wrap:anywhere}
+.inventory .item-wrap .item{padding-bottom:25px}
+.inventory .item .name{white-space:normal;line-height:1.25;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;min-height:2.5em}
+.inventory-search:focus-within{outline:3px solid #127275;outline-offset:1px}
+input:focus-visible,summary:focus-visible{outline:3px solid #127275;outline-offset:1px}
+.countline{flex-wrap:wrap;gap:8px;line-height:1.5}
+.countline>span{flex:1 1 180px}
+.countline small{display:block;white-space:normal}
+.recipe-parts span{white-space:normal;line-height:1.5}
+@media(max-height:700px) and (orientation:portrait){header{height:94px;min-height:94px}.portrait.hero{height:100px}#stats{min-height:62px}.camp-intro .eyebrow,.camp-intro p{display:none}.camp-intro{min-height:36px}.camp-intro h1{font-size:21px}.inventory .item .sprite,.inventory .item .item-art{width:60px;height:60px}.inventory .item-wrap .item{min-height:110px}.inventory-toolbar{margin-top:4px}}
+@media(max-height:600px) and (orientation:landscape){#app{max-width:980px;width:100%;grid-template-columns:minmax(230px,30%) minmax(0,1fr);grid-template-rows:110px 72px 1fr 62px}header{height:110px;min-height:110px}.portrait.hero{height:110px}#stats{min-height:72px}.stat small{font-size:10px}nav{height:62px}nav button{min-height:58px;font-size:9px}nav .sprite,nav .item-art{width:28px;height:28px}.dialogue .portrait{width:64px;height:64px}.region{font-size:10px}}

@@ -10,8 +10,9 @@ test('illustrated UI exists and real browser actions preserve inventory and save
  await page.goto('file:///'+entry.replaceAll('\\','/'));
  await page.locator('[data-nav="camp"]').waitFor();
  for(const tab of ['recipes','helper','village','map','journal','camp']){await page.locator(`[data-nav="${tab}"]`).click();assert.equal(await page.locator('main').getAttribute('data-page'),tab);}
+ await page.locator('[data-nav="recipes"]').click();
  await page.locator('[data-open-recipe="0"]').click();
- await page.locator('#equip-required').click();await page.locator('#craft-now').click();
+ await page.locator('#craft-now').click();
  let state=await page.evaluate(()=>app.snapshot());assert.equal(state.inventory[2],1);assert.equal(state.inventory[9],1);
  await page.locator('[data-nav="camp"]').click();await page.locator('#eat').click();
  await page.locator('#settings').click();await page.locator('[data-save="1"]').click();

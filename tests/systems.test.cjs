@@ -32,5 +32,5 @@ test('achievement definitions and unlocks are persistent and idempotent',()=>{
 test('statistics expose progress for items recipes quests and chapters',()=>{
   assert.equal(typeof P.statistics,'function');
   const s=P.newGame(1);s.discovered.fill(true);s.quests.forEach(q=>q.status='complete');s.chapter=4;
- assert.deepEqual(P.statistics(s),{items:5,recipes:237,quests:87,chapter:5,achievements:0});
+ assert.deepEqual(P.statistics(s),{items:5,recipes:254,quests:87,chapter:5,achievements:0});
 });
