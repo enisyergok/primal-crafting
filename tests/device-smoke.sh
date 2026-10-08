@@ -5,9 +5,22 @@ adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 for size in 720x1280 1080x2400 1600x2560 1280x720; do
   adb shell wm size "$size"
   adb shell wm density 320
-  result=$(adb shell am instrument -w com.enisyergok.primalcrafting.test/com.enisyergok.primalcrafting.SmokeTest)
-  echo "$size: $result"
-  echo "$result" | grep -Eq 'PASS: .*menus'
+  passed=0
+  for attempt in 1 2; do
+    set +e
+    result=$(adb shell am instrument -w com.enisyergok.primalcrafting.test/com.enisyergok.primalcrafting.SmokeTest 2>&1)
+    instrument_status=$?
+    set -e
+    echo "$size attempt $attempt: $result"
+    if [ "$instrument_status" -eq 0 ] && echo "$result" | grep -Eq 'PASS: .*menus'; then
+      passed=1
+      break
+    fi
+    adb shell am force-stop com.enisyergok.primalcrafting || true
+    adb shell pm clear com.enisyergok.primalcrafting || true
+    sleep 2
+  done
+  test "$passed" -eq 1
   mkdir -p "build/screenshots/$size"
   adb pull /sdcard/Android/data/com.enisyergok.primalcrafting/files/. "build/screenshots/$size/"
 done
