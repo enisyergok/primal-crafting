@@ -111,6 +111,10 @@ h3{color:#4a2e16}
 .gather-grid button{background:linear-gradient(180deg,#fff4d0,#e5d6a8);border-color:#a8a46c;box-shadow:inset 0 1px #fffde6,0 2px 4px #61723a22}
 .recipe-card{padding:9px;margin:7px 0;border-radius:10px;border-color:#c19a60;background:linear-gradient(135deg,#fff3d0,#edcf98);box-shadow:inset 0 1px #fffce4,0 3px 6px #74451f22}
 .recipe-card:hover{border-color:#ce913b;transform:translateY(-1px)}
+.recipe-card.unknown{cursor:default;filter:grayscale(.7);opacity:.7}
+.recipe-card.unknown:hover,.recipe-card.unknown:active{border-color:#c19a60;transform:none;filter:grayscale(.7);background:linear-gradient(135deg,#f6e7c5,#e6cf9e)}
+.recipe-mystery{display:inline-flex;width:72px;height:72px;align-items:center;justify-content:center;border:2px dashed #a98b5d;border-radius:50%;background:#ead5a6;color:#886b43;font-size:32px;font-weight:bold;flex-shrink:0}
+.recipe-progress{margin:0 0 6px}
 .recipe-card>.sprite,.recipe-card>.item-art{width:72px;height:72px}
 .recipe-card.selected{outline:2px solid #a9651f;box-shadow:inset 0 0 0 2px #fff0b4,0 4px 8px #8c501e44}
 .recipe-search{min-height:46px;border-radius:10px;border-color:#c19a60;background:#fff4d2;box-shadow:inset 0 1px #fffce9,0 2px 4px #75481d22}
