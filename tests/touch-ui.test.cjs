@@ -24,6 +24,7 @@ test('Android material drag has a pointer-event fallback',()=>{
  assert.match(ui,/advanced-medicine\.png/);
  assert.match(ui,/advanced-late\.png/);
  assert.match(ui,/advanced-keepsakes\.png/);
+for(const atlas of ['late-items-01.png','late-items-02.png','late-items-03.png','late-items-04.png','late-items-05.png','late-items-06.png','late-items-07.png','late-items-08.png','late-items-09.png','late-items-10.png']){assert.match(ui,new RegExp(atlas.replace('.','\\.')));assert.ok(fs.existsSync(`app/src/main/assets/art/${atlas}`),`${atlas} missing`)}
  assert.match(ui,/generatedIcons/);
  assert.match(ui,/const group=sheet<4\?'materials':'foods'/);
  assert.match(ui,/function settingsPage\(\)/);
